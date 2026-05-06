@@ -297,6 +297,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .ct-empty { font-size: 13px; color: #bbb; text-align: center; padding: 18px; }
 .ct-footer { display: flex; gap: 8px; }
 .ct-footer .btn { flex: 1; height: 48px; font-size: 15px; }
+
+/* 4 Gewinnt */
+.vg-wrap { background: #1a1a2e; border-radius: 12px; padding: 10px; margin-bottom: 2px; }
+.vg-board { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-bottom: 6px; }
+.vg-cell { aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,0.1); }
+.vg-cell.t1 { background: #2980d9; }
+.vg-cell.t2 { background: #e74c3c; }
+.vg-cell.win-cell { background: #f1c40f; box-shadow: 0 0 0 2px #f39c12; }
+.vg-col-btns { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
+.vg-col-btn { aspect-ratio: 1; border-radius: 7px; border: none; background: rgba(255,255,255,0.18); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+.vg-col-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.88); }
+.vg-col-btn:disabled { opacity: 0.22; pointer-events: none; }
+.vg-pumpe-row { margin: 8px 0 0; }
+.vg-pumpe-btn { width: 100%; padding: 11px; border-radius: 9px; border: 1.5px solid #e0a0a0; background: #fff8f8; color: #c0392b; font-size: 14px; font-weight: 600; cursor: pointer; }
+.vg-pumpe-btn:active { background: #fde8e8; }
+.vg-turn-badge { text-align: center; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 8px; margin-bottom: 10px; }
+.vg-turn-badge.t1 { background: #dceeff; color: #1a6bc0; }
+.vg-turn-badge.t2 { background: #ffdddd; color: #c01a1a; }
+.vg-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 15px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -405,6 +424,7 @@ let state = {
   tagnacht: { open:false, loserCount:1, showResult:false, scores:{} },
   bergtal: { open:false, loserCount:1, showResult:false, scores:{} },
   madn: { open:false, order:[], scores:{}, currentTurn:0, winner:null, lastReset:[] },
+  vierGewinnt: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], currentTeam:0, board:Array.from({length:9},()=>new Array(6).fill(null)), winner:null, winCells:[], lastDrop:null },
 };
 
 function applyGamePenalty() { /* Keine Strafen — no-op */ }
@@ -423,6 +443,8 @@ function toggleAnwesend(s) {
     state.abräumen.team2 = state.abräumen.team2.filter(p => p !== s);
     state.bis100.team1 = state.bis100.team1.filter(p => p !== s);
     state.bis100.team2 = state.bis100.team2.filter(p => p !== s);
+    state.vierGewinnt.team1 = state.vierGewinnt.team1.filter(p => p !== s);
+    state.vierGewinnt.team2 = state.vierGewinnt.team2.filter(p => p !== s);
   } else {
     state.anwesend.push(s);
   }
@@ -513,6 +535,7 @@ function renderSpiele() {
   html += renderTagNachtCard();
   html += renderBergTalCard();
   html += renderMadnCard();
+  html += renderVierGewinntCard();
   c.innerHTML = html;
 }
 
@@ -1262,6 +1285,158 @@ function madnReset() {
   state.madn.winner=null; state.madn.lastReset=[]; renderSpiele();
 }
 
+// ── 4 Gewinnt ─────────────────────────────────────────────────
+function renderVierGewinntCard() {
+  const vg = state.vierGewinnt;
+  const n1 = vg.teamName1||'Team 1', n2 = vg.teamName2||'Team 2';
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+
+  let boardCells = '';
+  for (let row=5; row>=0; row--) {
+    for (let col=0; col<9; col++) {
+      const val = vg.board[col][row];
+      const isWin = vg.winCells.some(wc => wc.col===col && wc.row===row);
+      const cls = isWin ? 'win-cell' : val===0 ? 't1' : val===1 ? 't2' : '';
+      boardCells += '<div class="vg-cell '+cls+'"></div>';
+    }
+  }
+
+  let colBtns = '';
+  for (let col=0; col<9; col++) {
+    const full = vg.board[col].every(c => c!==null);
+    const dis = full || vg.winner!==null;
+    colBtns += '<button class="vg-col-btn"'+(dis?' disabled':'')+' onclick="vgDrop('+col+')">'+(col+1)+'</button>';
+  }
+
+  const playerChips = aktiv.map(s => {
+    const cls = vg.team1.includes(s)?'chip-team1':vg.team2.includes(s)?'chip-team2':'chip-unassigned';
+    return '<span class="tanne-player-chip '+cls+'" onclick="vgTogglePlayer(\''+esc(s)+'\')" style="cursor:pointer;"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>';
+  }).join('');
+
+  const t1Chips = vg.team1.map(s => '<span class="tanne-player-chip chip-team1" onclick="vgTogglePlayer(\''+esc(s)+'\')"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>').join('') || '<div style="font-size:12px;color:#bbb;padding:4px 0;">–</div>';
+  const t2Chips = vg.team2.map(s => '<span class="tanne-player-chip chip-team2" onclick="vgTogglePlayer(\''+esc(s)+'\')"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>').join('') || '<div style="font-size:12px;color:#bbb;padding:4px 0;">–</div>';
+
+  const ctName = vg.currentTeam===0 ? n1 : n2;
+  const ctCls  = vg.currentTeam===0 ? 't1' : 't2';
+
+  let statusHtml = '';
+  if (vg.winner===null && aktiv.length>=2) {
+    statusHtml = '<div class="vg-turn-badge '+ctCls+'">🎳 '+esc(ctName)+' ist dran</div>';
+  } else if (vg.winner===-1) {
+    statusHtml = '<div class="vg-winner-banner">🤝 Unentschieden!</div>';
+  } else if (vg.winner!==null) {
+    const wn = vg.winner===0 ? n1 : n2;
+    statusHtml = '<div class="vg-winner-banner">🏆 '+esc(wn)+' gewinnt!</div>';
+  }
+
+  const pumpeBtn = vg.winner===null ? '<div class="vg-pumpe-row"><button class="vg-pumpe-btn" onclick="vgPumpe()">💨 Pumpe — keine Münze, nächstes Team</button></div>' : '';
+
+  return `<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleVierGewinnt()">
+      <div><div class="spiel-title">🔵 4 Gewinnt</div><div class="spiel-meta">2 Teams · 4 in einer Reihe gewinnt</div></div>
+      <span class="spiel-chevron${vg.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${vg.open?' open':''}">
+      <div class="spiel-desc">Teilt die Spieler auf 2 Teams auf. Nach jedem Wurf tippt ihr die geworfene Zahl (1–9) — die Münze eures Teams fällt in die entsprechende Spalte. Wer zuerst <strong>4 Münzen in einer Reihe</strong> verbindet (horizontal, vertikal oder diagonal), gewinnt! Bei einer <strong>Pumpe</strong> fällt keine Münze und das andere Team ist dran.</div>
+      <div class="team-names-row">
+        <div class="team-name-field">
+          <span class="team-name-label t1">Team 1</span>
+          <input class="team-name-input t1" type="text" maxlength="20" value="${esc(n1)}" oninput="state.vierGewinnt.teamName1=this.value;renderSpiele()" placeholder="Team 1">
+        </div>
+        <div class="team-name-field">
+          <span class="team-name-label t2">Team 2</span>
+          <input class="team-name-input t2" type="text" maxlength="20" value="${esc(n2)}" oninput="state.vierGewinnt.teamName2=this.value;renderSpiele()" placeholder="Team 2">
+        </div>
+      </div>
+      <div class="tanne-players-row">${playerChips}</div>
+      <div class="tanne-teams" style="margin-bottom:10px;">
+        <div class="tanne-team-col"><div class="tanne-team-label tanne-team1-label">${esc(n1)} (${vg.team1.length})</div>${t1Chips}</div>
+        <div class="tanne-team-col"><div class="tanne-team-label tanne-team2-label">${esc(n2)} (${vg.team2.length})</div>${t2Chips}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="btn" style="flex:1;" onclick="vgRandomTeams()">🎲 Zufällig aufteilen</button>
+      </div>
+      ${statusHtml}
+      <div class="vg-wrap">
+        <div class="vg-board">${boardCells}</div>
+        <div class="vg-col-btns">${colBtns}</div>
+      </div>
+      ${pumpeBtn}
+      <div class="spiel-actions" style="margin-top:12px;">
+        <button class="btn btn-danger" onclick="vgReset()">Zurücksetzen</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleVierGewinnt() {
+  state.vierGewinnt.open = !state.vierGewinnt.open;
+  renderSpiele();
+}
+
+function vgTogglePlayer(name) {
+  const vg = state.vierGewinnt;
+  if (vg.team1.includes(name)) { vg.team1 = vg.team1.filter(p=>p!==name); vg.team2.push(name); }
+  else if (vg.team2.includes(name)) { vg.team2 = vg.team2.filter(p=>p!==name); }
+  else { vg.team1.push(name); }
+  renderSpiele();
+}
+
+function vgRandomTeams() {
+  const vg = state.vierGewinnt;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  const sh = [...aktiv].sort(()=>Math.random()-0.5);
+  vg.team1 = sh.filter((_,i)=>i%2===0);
+  vg.team2 = sh.filter((_,i)=>i%2===1);
+  renderSpiele();
+}
+
+function vgCheckWin(board, lc, lr, team) {
+  const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+  for (const [dc,dr] of dirs) {
+    const cells = [{col:lc,row:lr}];
+    for (let i=1;i<4;i++){const c=lc+dc*i,r=lr+dr*i;if(c<0||c>8||r<0||r>5||board[c][r]!==team)break;cells.push({col:c,row:r});}
+    for (let i=1;i<4;i++){const c=lc-dc*i,r=lr-dr*i;if(c<0||c>8||r<0||r>5||board[c][r]!==team)break;cells.push({col:c,row:r});}
+    if (cells.length>=4) return cells;
+  }
+  return null;
+}
+
+function vgDrop(col) {
+  const vg = state.vierGewinnt;
+  if (vg.winner!==null) return;
+  let dropRow = -1;
+  for (let r=0;r<6;r++) { if(vg.board[col][r]===null){dropRow=r;break;} }
+  if (dropRow===-1) return;
+  vg.board[col][dropRow] = vg.currentTeam;
+  vg.lastDrop = {col, row:dropRow};
+  const wc = vgCheckWin(vg.board, col, dropRow, vg.currentTeam);
+  if (wc) {
+    vg.winner = vg.currentTeam; vg.winCells = wc;
+    applyGamePenalty();
+  } else {
+    const draw = vg.board.every(c=>c.every(cell=>cell!==null));
+    if (draw) { vg.winner=-1; vg.winCells=[]; }
+    else vg.currentTeam = vg.currentTeam===0?1:0;
+  }
+  renderSpiele();
+}
+
+function vgPumpe() {
+  const vg = state.vierGewinnt;
+  if (vg.winner!==null) return;
+  vg.lastDrop = null;
+  vg.currentTeam = vg.currentTeam===0?1:0;
+  renderSpiele();
+}
+
+function vgReset() {
+  const vg = state.vierGewinnt;
+  vg.board = Array.from({length:9},()=>new Array(6).fill(null));
+  vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null;
+  renderSpiele();
+}
+
 // ── Club selection ────────────────────────────────────────────
 function resetAllGames() {
   state.spiele.forEach(g=>{g.scores={};g.showResult=false;});
@@ -1272,6 +1447,7 @@ function resetAllGames() {
   state.tagnacht.scores={}; state.tagnacht.showResult=false;
   state.bergtal.scores={}; state.bergtal.showResult=false;
   state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[];
+  const vg=state.vierGewinnt; vg.board=Array.from({length:9},()=>new Array(6).fill(null)); vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null; vg.team1=[]; vg.team2=[];
 }
 
 function selectClub(id) {
