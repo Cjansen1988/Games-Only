@@ -184,13 +184,31 @@
         .empty-hint { color:var(--text-light); font-size:.9rem; text-align:center; padding:1.25rem; }
 
         /* ── Team Select ── */
-        .ts-team-badge { display:inline-block; margin-top:.65rem; font-size:.78rem; font-weight:700; padding:.25rem .8rem; border-radius:20px; background:#e8eaf6; color:var(--primary); }
-        .ms-back-btn { position:absolute; top:1.2rem; left:1.5rem; background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); border-radius:8px; padding:.4rem .9rem; font-size:.82rem; font-weight:700; cursor:pointer; transition:all .18s; }
-        .ms-back-btn:hover { background:rgba(255,255,255,.25); }
-        #modeSelectScreen, #teamSelectScreen { position:relative; }
+        #teamSelectScreen { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; gap:2rem; }
+        .ts-header { text-align:center; color:white; }
+        .ts-header h1 { font-size:2.2rem; font-weight:900; letter-spacing:-.5px; }
+        .ts-header p  { font-size:1rem; opacity:.75; margin-top:.75rem; max-width:480px; line-height:1.6; }
+        .ts-cards { display:flex; gap:1.25rem; flex-wrap:wrap; justify-content:center; max-width:860px; width:100%; }
+        .ts-card  { background:white; border-radius:18px; padding:1.75rem 1.5rem; cursor:pointer; transition:all .22s; text-align:center; flex:1; min-width:220px; max-width:260px; box-shadow:0 8px 32px rgba(0,0,0,.3); border:3px solid transparent; }
+        .ts-card:hover { transform:translateY(-6px); box-shadow:0 18px 50px rgba(0,0,0,.45); }
+        .ts-card-bb   { border-color:#1a5c2a; }
+        .ts-card-hb   { border-color:#1a3575; }
+        .ts-card-new  { border-color:#7c4daa; }
+        .ts-badge-wrap { width:64px; height:64px; border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto .9rem; font-size:1.4rem; font-weight:900; color:white; letter-spacing:-1px; }
+        .ts-card-bb .ts-badge-wrap  { background:#1a5c2a; }
+        .ts-card-hb .ts-badge-wrap  { background:#1a3575; }
+        .ts-card-new .ts-badge-wrap { background:#7c4daa; font-size:1.8rem; }
+        .ts-card-title { font-size:1.15rem; font-weight:800; color:#1a1a1a; margin-bottom:.45rem; }
+        .ts-card-desc  { font-size:.78rem; color:#777; line-height:1.55; }
+        .ts-team-badge { display:inline-block; margin-top:.7rem; font-size:.72rem; font-weight:700; padding:.22rem .75rem; border-radius:20px; }
+        .ts-card-bb .ts-team-badge  { background:#e8f5e9; color:#1a5c2a; }
+        .ts-card-hb .ts-team-badge  { background:#e3f0ff; color:#1a3575; }
+        .ts-card-new .ts-team-badge { background:#f3e5f5; color:#7c4daa; }
 
         /* ── Mode Select ── */
-        #modeSelectScreen { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; }
+        #modeSelectScreen { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; position:relative; }
+        .ms-back-btn { position:absolute; top:1.2rem; left:1.5rem; background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); border-radius:8px; padding:.4rem .9rem; font-size:.82rem; font-weight:700; cursor:pointer; transition:all .18s; }
+        .ms-back-btn:hover { background:rgba(255,255,255,.25); }
         .ms-header { text-align:center; color:white; margin-bottom:2.5rem; }
         .ms-header h1 { font-size:2.2rem; font-weight:900; }
         .ms-header p  { font-size:1rem; opacity:.7; margin-top:.5rem; }
@@ -227,6 +245,8 @@
             .sv-body { padding:1rem; } .sv-header { padding:1rem; }
             .fb-nav { gap:.4rem; }
             .ms-card { width:100%; max-width:320px; }
+            .ts-card { min-width:100%; max-width:100%; }
+            .ts-header h1 { font-size:1.7rem; }
         }
     </style>
 </head>
@@ -234,28 +254,28 @@
 
 <!-- ══════════ TEAM SELECT ══════════ -->
 <div id="teamSelectScreen" class="hidden">
-    <div class="ms-header">
-        <h1>🎳 Kegelspiele &amp; Stadtmeisterschaft Training</h1>
-        <p>Wähle hier dein Team für den Abend. Auf der nächsten Seite kannst du dann entscheiden, ob du die normalen Spiele sehen möchtest oder für die Stadtmeisterschaft üben willst.</p>
+    <div class="ts-header">
+        <h1>🎳 Kegelspiele &amp; Stadtmeisterschaft</h1>
+        <p>Wähle hier dein Team für den Abend. Auf der nächsten Seite kannst du dann entscheiden, ob du die normalen Spiele spielen oder für die Stadtmeisterschaft üben möchtest.</p>
     </div>
-    <div class="ms-cards" style="max-width:900px">
-        <div class="ms-card" onclick="selectTeam('blackout')">
-            <div class="ms-icon">🖤</div>
-            <div class="ms-title">Blackout Boys</div>
-            <div class="ms-desc">Christian J. · Christian W. · Christian L. · Sebastian J. · Laurenz · Thorben · Hannes · Heinrich · Jan-Henning · Lucas · Lukas · Matthias · Michael · Dimi · Sebastian E.</div>
-            <span class="ts-team-badge">15 Spieler · Preset</span>
+    <div class="ts-cards">
+        <div class="ts-card ts-card-bb" onclick="selectTeam('blackout')">
+            <div class="ts-badge-wrap">BB</div>
+            <div class="ts-card-title">Blackout Boys</div>
+            <div class="ts-card-desc">Christian J. · Christian W. · Christian L. · Sebastian J. · Laurenz · Thorben · Hannes · Heinrich · Jan-Henning · Lucas · Lukas · Matthias · Michael · Dimi · Sebastian E.</div>
+            <span class="ts-team-badge">15 Spieler</span>
         </div>
-        <div class="ms-card" onclick="selectTeam('harske')">
-            <div class="ms-icon">⚡</div>
-            <div class="ms-title">Harske Bössels</div>
-            <div class="ms-desc">Nils · Jonas · Steffen · Marcel · Arling · Laui · Nico · Pinkernell · Wiktor · Henrik · Alex · Andre · Dennis · Arthur · Lukas · Simon · Tim</div>
-            <span class="ts-team-badge">17 Spieler · Preset</span>
+        <div class="ts-card ts-card-hb" onclick="selectTeam('harske')">
+            <div class="ts-badge-wrap">HB</div>
+            <div class="ts-card-title">Harske Bössels</div>
+            <div class="ts-card-desc">Nils · Jonas · Steffen · Marcel · Arling · Laui · Nico · Pinkernell · Wiktor · Henrik · Alex · Andre · Dennis · Arthur · Lukas · Simon · Tim</div>
+            <span class="ts-team-badge">17 Spieler</span>
         </div>
-        <div class="ms-card" onclick="selectTeam('custom')">
-            <div class="ms-icon">➕</div>
-            <div class="ms-title">Neues Team</div>
-            <div class="ms-desc">Eigene Spieler anlegen und Mannschaftsname vergeben</div>
-            <span class="ts-team-badge" style="background:var(--bg);color:var(--text-light)">Leer starten</span>
+        <div class="ts-card ts-card-new" onclick="selectTeam('custom')">
+            <div class="ts-badge-wrap">✏️</div>
+            <div class="ts-card-title">Neues Team</div>
+            <div class="ts-card-desc">Eigene Spieler anlegen und einen Mannschaftsnamen vergeben</div>
+            <span class="ts-team-badge">Leer starten</span>
         </div>
     </div>
 </div>
@@ -291,7 +311,7 @@
             <p id="teamLabel">Mannschaft erfassen</p>
         </div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-ghost btn-sm" onclick="backToModeSelect()">← Zur Übersicht</button>
+            <button class="btn btn-ghost btn-sm" onclick="backToModeSelect()">← Zurück zur Auswahl</button>
             <button class="btn btn-ghost btn-sm" onclick="openStandings()">📊 Zwischenstand ↗</button>
         </div>
     </header>
