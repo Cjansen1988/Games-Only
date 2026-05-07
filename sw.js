@@ -1,23 +1,28 @@
-const CACHE = 'kegel-spiele-v2';
-const FILES = ['./spiele.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE = 'kegel-spiele-v3';
+const FILES = [
+  './index.html',
+  './spiele.html',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
+];
 
-// Install: cache new files and skip waiting immediately
+// Install: cache all files immediately
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
-  self.skipWaiting(); // take over without waiting for old SW to die
+  self.skipWaiting();
 });
 
-// Activate: delete ALL old caches, then claim clients
+// Activate: delete old caches and take control of all tabs
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim()) // take control of all open tabs now
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 // Fetch: serve from cache, fall back to network
-// index.html is NOT in the cache — always fetched fresh from network
 self.addEventListener('fetch', e => {
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
