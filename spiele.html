@@ -451,17 +451,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </div>
 
 <div class="topbar">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <a href="index.html" class="btn" style="font-size:12px;padding:5px 10px;text-decoration:none;flex-shrink:0;">← Zurück</a>
-    <div id="topbar-logo-bb" style="display:none;width:36px;height:36px;border-radius:6px;background:#1a5c2a;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-1px;">BB</div>
-    <div id="topbar-logo-hb" style="display:none;width:36px;height:36px;border-radius:6px;background:#1a3575;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-1px;">HB</div>
-    <div id="topbar-logo-custom" style="display:none;width:36px;height:36px;border-radius:6px;background:#7c4daa;align-items:center;justify-content:center;font-size:18px;">✏️</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div id="topbar-logo-bb" style="display:none;width:32px;height:32px;border-radius:6px;background:#1a5c2a;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;letter-spacing:-1px;flex-shrink:0;">BB</div>
+    <div id="topbar-logo-hb" style="display:none;width:32px;height:32px;border-radius:6px;background:#1a3575;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;letter-spacing:-1px;flex-shrink:0;">HB</div>
+    <div id="topbar-logo-custom" style="display:none;width:32px;height:32px;border-radius:6px;background:#7c4daa;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✏️</div>
     <div>
-      <div id="topbar-club-name" style="font-size:15px;font-weight:700;line-height:1.15;">Kegel Spiele</div>
+      <div id="topbar-club-name" style="font-size:14px;font-weight:700;line-height:1.15;">Kegel Spiele</div>
       <div style="font-size:10px;color:#888;font-weight:500;letter-spacing:0.04em;">SPIELE-APP</div>
     </div>
   </div>
   <div class="topbar-actions">
+    <button class="btn" onclick="goToOverview()" style="font-size:11px;padding:5px 9px;">↩ Übersicht</button>
+    <button class="btn" onclick="goToTeamSelect()" style="font-size:11px;padding:5px 9px;">⌂ Team</button>
     <button class="btn btn-danger" onclick="confirmReset()">Reset</button>
   </div>
 </div>
@@ -1790,6 +1791,19 @@ function confirmReset() {
 function showClubSelector() {
   document.getElementById('front-page').style.display='none';
   document.getElementById('club-selector').style.display='flex';
+}
+
+// ── Navigation zurück zu index.html ──────────────────
+function goToOverview() {
+  // Löscht nur den Modus → index.html zeigt die Modus-Auswahl, Team bleibt
+  localStorage.removeItem('kegel_mode');
+  window.location.href = 'index.html';
+}
+function goToTeamSelect() {
+  // Löscht Team + Modus → index.html zeigt die Teamauswahl
+  localStorage.removeItem('kegel_mode');
+  localStorage.removeItem('kegel_team');
+  window.location.href = 'index.html';
 }
 
 // URL-param based initialization — skip front-page when coming from index.html
