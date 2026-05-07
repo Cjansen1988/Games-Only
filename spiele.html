@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kegel Spiele</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Spiele">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; font-size: 14px; }
+
+.topbar { background: #fff; border-bottom: 1px solid #e0ddd5; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-actions { display: flex; gap: 8px; }
+.btn { padding: 7px 14px; border-radius: 8px; border: 1px solid #d0cdc5; background: #fff; font-size: 13px; cursor: pointer; font-weight: 500; color: #1a1a1a; }
+.btn:active { background: #f0ede8; }
+.btn-danger { border-color: #e0a0a0; color: #c0392b; }
+.btn-danger:active { background: #fdf0f0; }
+.btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.btn-primary:active { background: #333; }
+
+/* Presence panel */
+.presence-panel { background: #fff; border-bottom: 1px solid #e0ddd5; padding: 10px 14px; }
+.presence-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; }
+.presence-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.presence-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px 5px 6px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid; user-select: none; transition: opacity 0.15s; }
+.presence-chip:active { opacity: 0.7; }
+.presence-chip.da { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+.presence-chip.weg { background: #f5f5f5; color: #aaa; border-color: #ddd; opacity: 0.6; }
+.chip-avatar { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #555; flex-shrink: 0; }
+
+/* Games list */
+.spiele-page { padding: 12px 12px 80px; }
+.spiel-card { background: #fff; border-radius: 10px; border: 1px solid #e0ddd5; overflow: hidden; margin-bottom: 12px; }
+.spiel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; }
+.spiel-header:active { background: #f5f4f0; }
+.spiel-title { font-size: 16px; font-weight: 600; }
+.spiel-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.spiel-chevron { font-size: 18px; color: #aaa; transition: transform 0.2s; }
+.spiel-chevron.open { transform: rotate(180deg); }
+.spiel-body { display: none; border-top: 1px solid #f0ede8; padding: 16px; }
+.spiel-body.open { display: block; }
+.spiel-desc { font-size: 13px; color: #555; line-height: 1.55; background: #f5f4f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; border-left: 3px solid #1a1a1a; }
+.spiel-actions { display: flex; gap: 8px; margin-top: 14px; }
+.spiel-actions .btn { flex: 1; height: 42px; font-size: 14px; }
+
+/* Score inputs */
+.score-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f5f4f0; }
+.score-row:last-of-type { border-bottom: none; }
+.score-name { display: flex; align-items: center; gap: 8px; flex: 1; font-size: 14px; font-weight: 500; }
+.score-input { width: 80px; height: 40px; border: 1px solid #d0cdc5; border-radius: 8px; padding: 0 10px; font-size: 16px; font-weight: 600; text-align: center; background: #fff; color: #1a1a1a; }
+.score-input:focus { outline: none; border-color: #888; }
+.result-list { margin-top: 14px; }
+.result-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; }
+.result-rank { font-size: 16px; font-weight: 700; width: 28px; text-align: center; color: #888; }
+.result-name { flex: 1; font-size: 14px; font-weight: 500; }
+.result-score { font-size: 16px; font-weight: 700; }
+.result-row.loser { background: #fff0f0; }
+.result-row.loser .result-rank, .result-row.loser .result-name, .result-row.loser .result-score { color: #c0392b; }
+.result-row.top { background: #f0fff4; }
+.result-row.top .result-rank { color: #27ae60; }
+.loser-badge { font-size: 11px; background: #fde8e8; color: #c0392b; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
+.winner-tag { font-size: 11px; background: #e8fde8; color: #27ae60; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
+.loser-count-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #f0ede8; }
+.loser-count-label { font-size: 13px; color: #555; flex: 1; }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #d0cdc5; background: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1a1a1a; }
+.stepper-btn:active { background: #f0ede8; }
+.stepper-val { font-size: 16px; font-weight: 600; min-width: 20px; text-align: center; }
+
+/* Hausnummer */
+.hn-legend { font-size: 11px; color: #888; margin-bottom: 12px; padding: 8px 10px; background: #f5f4f0; border-radius: 8px; }
+.hn-inputs { display: flex; align-items: center; gap: 5px; }
+.hn-digit { width: 42px; height: 44px; border-radius: 8px; border: 1.5px solid #d0cdc5; text-align: center; font-size: 20px; font-weight: 800; background: #fff; color: #1a1a1a; -moz-appearance: textfield; }
+.hn-digit::-webkit-outer-spin-button, .hn-digit::-webkit-inner-spin-button { -webkit-appearance: none; }
+.hn-digit:focus { outline: none; border-color: #1a1a1a; }
+.hn-sep { font-size: 18px; font-weight: 300; color: #ccc; }
+.hn-result { font-size: 18px; font-weight: 800; color: #1a5c2a; min-width: 44px; margin-left: 4px; }
+
+/* Avatar */
+.avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #555; flex-shrink: 0; }
+
+/* Team games shared */
+.tanne-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.tanne-team-col { background: #f5f4f0; border-radius: 8px; padding: 10px; min-height: 60px; }
+.tanne-team-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 8px; }
+.tanne-team1-label { color: #1a6bc0; }
+.tanne-team2-label { color: #c01a1a; }
+.tanne-player-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 5px; border-radius: 20px; margin: 3px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; }
+.tanne-player-chip:active { opacity: 0.7; }
+.chip-unassigned { background: #e8e5de; color: #555; border-color: #d0cdc5; }
+.chip-team1 { background: #dceeff; color: #1a6bc0; border-color: #aaccee; }
+.chip-team2 { background: #ffdddd; color: #c01a1a; border-color: #eeaaaa; }
+.tanne-players-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0ede8; }
+.team-names-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.team-name-field { display: flex; flex-direction: column; gap: 3px; }
+.team-name-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.team-name-label.t1 { color: #1a6bc0; }
+.team-name-label.t2 { color: #c01a1a; }
+.team-name-input { height: 36px; border: 1.5px solid #d0cdc5; border-radius: 8px; padding: 0 10px; font-size: 14px; font-weight: 600; background: #fff; color: #1a1a1a; }
+.team-name-input.t1 { border-color: #aaccee; background: #f5f9ff; color: #1a6bc0; }
+.team-name-input.t2 { border-color: #eeaaaa; background: #fff5f5; color: #c01a1a; }
+.team-name-input:focus { outline: none; border-color: #888; }
+
+/* Tannenbaum */
+.tanne-trees { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+.tanne-tree-wrap { background: #f5f4f0; border-radius: 10px; padding: 10px 6px 14px; }
+.tanne-tree-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; margin-bottom: 10px; }
+.tanne-tree-title.t1 { color: #1a6bc0; }
+.tanne-tree-title.t2 { color: #c01a1a; }
+.tanne-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 4px; }
+.tanne-cell { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; cursor: pointer; user-select: none; border: 1.5px solid; transition: all 0.1s; }
+.tanne-cell:active { transform: scale(0.92); }
+.tanne-cell.t1-active { background: #dceeff; color: #1a6bc0; border-color: #aaccee; }
+.tanne-cell.t1-done { background: #e8e5de; color: #bbb; border-color: #d0cdc5; text-decoration: line-through; }
+.tanne-cell.t2-active { background: #ffdddd; color: #c01a1a; border-color: #eeaaaa; }
+.tanne-cell.t2-done { background: #e8e5de; color: #bbb; border-color: #d0cdc5; text-decoration: line-through; }
+.tanne-progress { text-align: center; font-size: 12px; color: #888; margin-top: 8px; }
+.tanne-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+
+/* 2x Abräumen */
+.abr-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.abr-team-box { border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.abr-team-box.t1 { background: #dceeff; border: 1.5px solid #aaccee; }
+.abr-team-box.t2 { background: #ffdddd; border: 1.5px solid #eeaaaa; }
+.abr-team-box.done-box { opacity: 0.7; }
+.abr-team-name { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.abr-team-box.t1 .abr-team-name { color: #1a6bc0; }
+.abr-team-box.t2 .abr-team-name { color: #c01a1a; }
+.abr-throws { display: flex; align-items: center; gap: 10px; }
+.abr-throw-num { font-size: 36px; font-weight: 800; line-height: 1; min-width: 48px; text-align: center; color: #1a1a1a; }
+.abr-throw-label { font-size: 11px; color: #888; text-align: center; margin-top: 2px; }
+.abr-btn-throw { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #1a1a1a; background: #1a1a1a; color: #fff; font-size: 26px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.abr-btn-throw:active { transform: scale(0.92); background: #333; }
+.abr-btn-throw.minus { background: transparent; color: #888; border-color: #bbb; font-size: 22px; }
+.abr-btn-throw.minus:active { background: #f0ede8; }
+.abr-milestone-btns { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.abr-milestone { width: 100%; padding: 10px 8px; border-radius: 8px; border: 1.5px solid; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.1s; }
+.abr-milestone:active { transform: scale(0.97); }
+.abr-milestone.first-inactive { background: transparent; color: #888; border-color: #ccc; }
+.abr-milestone.first-done { background: #fff3cd; color: #856404; border-color: #ffc107; }
+.abr-milestone.second-inactive { background: transparent; color: #888; border-color: #ccc; }
+.abr-milestone.second-done { background: #d4edda; color: #155724; border-color: #28a745; }
+.abr-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+
+/* Bis 100 */
+.b100-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 8px; }
+.b100-team-box { border-radius: 10px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: background 0.2s; }
+.b100-team-box.t1 { background: #dceeff; border: 1.5px solid #aaccee; }
+.b100-team-box.t2 { background: #ffdddd; border: 1.5px solid #eeaaaa; }
+.b100-team-box.flash-reset { background: #ff4444 !important; border-color: #cc0000 !important; }
+.b100-team-box.won { background: #d4edda; border-color: #28a745; }
+.b100-team-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.b100-team-box.t1 .b100-team-name { color: #1a6bc0; }
+.b100-team-box.t2 .b100-team-name { color: #c01a1a; }
+.b100-team-box.won .b100-team-name { color: #155724; }
+.b100-score { font-size: 52px; font-weight: 800; line-height: 1; color: #1a1a1a; }
+.b100-team-box.won .b100-score { color: #155724; }
+.b100-score-label { font-size: 11px; color: #888; margin-top: -4px; }
+.b100-stats { display: flex; gap: 12px; }
+.b100-stat { text-align: center; }
+.b100-stat-num { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+.b100-stat-label { font-size: 10px; color: #888; line-height: 1.2; }
+.b100-numpad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; width: 100%; }
+.b100-num-btn { height: 40px; border-radius: 7px; border: 1.5px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.6); font-size: 16px; font-weight: 700; cursor: pointer; color: #1a1a1a; }
+.b100-num-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.9); }
+.b100-num-btn.disabled { opacity: 0.35; pointer-events: none; }
+.b100-reset-msg { font-size: 12px; font-weight: 700; color: #c0392b; text-align: center; padding: 4px 0; min-height: 20px; }
+.b100-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+
+/* Blackjack */
+.bj-player-section { border-bottom: 1px solid #f0ede8; padding: 12px 0; }
+.bj-player-section:last-child { border-bottom: none; padding-bottom: 4px; }
+.bj-player-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.bj-player-name { flex: 1; font-size: 14px; font-weight: 600; }
+.bj-total { font-size: 28px; font-weight: 800; line-height: 1; color: #1a1a1a; min-width: 40px; text-align: right; }
+.bj-total.bust { color: #c0392b; }
+.bj-total.win { color: #27ae60; }
+.bj-status { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.bj-status.playing { background: #e8f0ff; color: #1a6bc0; }
+.bj-status.done-st { background: #e8f5e9; color: #2e7d32; }
+.bj-status.bust { background: #ffebee; color: #c0392b; }
+.bj-status.win21 { background: #fff3cd; color: #856404; }
+.bj-card-picker { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.bj-card-btn { min-width: 40px; height: 44px; border-radius: 8px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; padding: 2px 6px; gap: 1px; }
+.bj-card-btn:active { background: #f0ede8; }
+.bj-card-btn.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.bj-card-btn.bj-card-locked { opacity: 0.4; pointer-events: none; }
+.bj-card-sub { font-size: 9px; font-weight: 500; opacity: 0.65; }
+.bj-numpad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 6px 0 5px; }
+.bj-num-btn { height: 42px; border-radius: 8px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 16px; font-weight: 700; cursor: pointer; color: #1a1a1a; }
+.bj-num-btn:active { background: #e8e5de; transform: scale(0.94); }
+.bj-throws-history { font-size: 11px; color: #aaa; text-align: center; padding: 3px 0; letter-spacing: 0.02em; }
+.bj-result-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; }
+.bj-result-row.bust-row { background: #fff0f0; }
+.bj-result-row.win-row { background: #f0fff4; }
+.bj-result-row.extra-loser { background: #fff5e5; }
+.bj-result-label { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+.bj-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+
+/* Tag-Nacht */
+.tn-player-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f0ede8; }
+.tn-player-row:last-of-type { border-bottom: none; }
+.tn-player-info { display: flex; align-items: center; gap: 8px; width: 90px; flex-shrink: 0; padding-top: 4px; }
+.tn-player-name { font-size: 12px; font-weight: 600; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-inputs { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.tn-group { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.tn-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; width: 22px; flex-shrink: 0; }
+.tn-group-label.day  { color: #c8860a; }
+.tn-group-label.night { color: #1a1a6a; }
+.tn-inp { width: 48px; height: 38px; border-radius: 7px; border: 1.5px solid #d0cdc5; text-align: center; font-size: 15px; font-weight: 700; background: #fff; color: #1a1a1a; -moz-appearance: textfield; }
+.tn-inp::-webkit-outer-spin-button, .tn-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
+.tn-inp:focus { outline: none; border-color: #888; }
+.tn-inp.night { background: #1a1a3a; color: #fff; border-color: #1a1a3a; }
+.tn-inp.night3 { background: #000; color: #ffd700; border-color: #000; }
+.tn-mult { font-size: 10px; color: #aaa; font-weight: 600; }
+.tn-total-col { width: 52px; flex-shrink: 0; text-align: right; padding-top: 8px; }
+.tn-total-val { font-size: 22px; font-weight: 800; color: #1a1a1a; line-height: 1; }
+.tn-total-label { font-size: 10px; color: #aaa; }
+
+/* Berg und Talfahrt */
+.bt-player-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f0ede8; }
+.bt-player-row:last-of-type { border-bottom: none; }
+.bt-player-info { display: flex; align-items: center; gap: 8px; width: 90px; flex-shrink: 0; padding-top: 4px; }
+.bt-player-name { font-size: 12px; font-weight: 600; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bt-inputs { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.bt-group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.bt-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; width: 22px; flex-shrink: 0; }
+.bt-group-label.berg { color: #1a5c2a; }
+.bt-group-label.tal  { color: #b52222; }
+.bt-inp { width: 42px; height: 38px; border-radius: 7px; border: 1.5px solid #d0cdc5; text-align: center; font-size: 15px; font-weight: 700; background: #fff; color: #1a1a1a; -moz-appearance: textfield; }
+.bt-inp::-webkit-outer-spin-button, .bt-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
+.bt-inp:focus { outline: none; border-color: #888; }
+.bt-inp.berg { background: #e8f5e9; color: #1a5c2a; border-color: #a5d6a7; }
+.bt-inp.tal  { background: #fdecea; color: #b52222; border-color: #f5a0a0; }
+.bt-sub { font-size: 10px; color: #aaa; font-weight: 600; min-width: 28px; text-align: right; }
+.bt-total-col { width: 52px; flex-shrink: 0; text-align: right; padding-top: 8px; }
+.bt-total-val { font-size: 22px; font-weight: 800; color: #1a1a1a; line-height: 1; }
+.bt-total-val.negative { color: #b52222; }
+.bt-total-label { font-size: 10px; color: #aaa; }
+
+/* MADN */
+.madn-player-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid #f0ede8; }
+.madn-player-row:last-child { border-bottom: none; }
+.madn-player-row.madn-active-row { background: #eef5ff; border-radius: 8px; padding: 9px 8px; margin: 2px -8px; border-bottom: none; }
+.madn-order-badge { width: 22px; height: 22px; border-radius: 50%; background: #e8e5de; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #888; flex-shrink: 0; }
+.madn-order-badge.active { background: #1a1a1a; color: #fff; }
+.madn-order-badge.won { background: #1a5c2a; color: #fff; }
+.madn-name-col { width: 76px; flex-shrink: 0; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.madn-progress-col { flex: 1; }
+.madn-progress-bar-bg { height: 9px; background: #f0ede8; border-radius: 5px; overflow: hidden; }
+.madn-progress-fill { height: 100%; border-radius: 5px; transition: width 0.35s; }
+.madn-score-num { width: 34px; font-size: 16px; font-weight: 800; text-align: right; flex-shrink: 0; }
+.madn-score-num.won { color: #1a5c2a; }
+.madn-reset-tag { font-size: 10px; font-weight: 700; color: #fff; background: #b52222; padding: 1px 6px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; }
+.madn-reset-tag-spacer { width: 36px; flex-shrink: 0; }
+.madn-active-section { background: #eef5ff; border-radius: 12px; padding: 12px 14px; margin: 10px 0 4px; border: 1.5px solid #b3d4f5; }
+.madn-active-label { font-size: 12px; font-weight: 700; color: #1a6bc0; margin-bottom: 10px; }
+.madn-numpad { display: flex; gap: 5px; }
+.madn-num-btn { flex: 1; height: 50px; border-radius: 9px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
+.madn-num-btn:active { background: #1a6bc0; color: #fff; border-color: #1a6bc0; }
+.madn-winner-banner { text-align: center; font-size: 20px; font-weight: 800; color: #1a5c2a; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 12px; padding: 18px; margin-top: 14px; }
+
+/* Club Selector */
+.club-selector-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; background: #f5f4f0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+.club-selector-title { font-size: 24px; font-weight: 800; color: #1a1a1a; margin-bottom: 6px; text-align: center; }
+.club-selector-sub { font-size: 14px; color: #888; margin-bottom: 36px; text-align: center; }
+.club-cards { display: flex; gap: 14px; width: 100%; max-width: 480px; }
+.club-card { flex: 1; background: #fff; border-radius: 16px; border: 2px solid #e0ddd5; padding: 24px 14px; display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; transition: transform 0.12s, border-color 0.12s; }
+.club-card:active { transform: scale(0.96); }
+.club-card:hover { border-color: #bbb; }
+.club-badge-lg { width: 72px; height: 72px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+.club-card-name { font-size: 15px; font-weight: 700; text-align: center; line-height: 1.35; color: #1a1a1a; }
+.club-card-count { font-size: 12px; color: #999; }
+
+/* Custom team form */
+.ct-view { display: none; flex-direction: column; width: 100%; max-width: 440px; gap: 12px; }
+.ct-back { align-self: flex-start; background: none; border: none; color: #888; font-size: 14px; cursor: pointer; padding: 0 0 2px; font-weight: 600; }
+.ct-back:hover { color: #1a1a1a; }
+.ct-heading { font-size: 20px; font-weight: 800; color: #1a1a1a; text-align: center; }
+.ct-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+.ct-input { height: 46px; border: 1.5px solid #d0cdc5; border-radius: 10px; padding: 0 14px; font-size: 15px; background: #fff; color: #1a1a1a; width: 100%; }
+.ct-input:focus { outline: none; border-color: #888; }
+.ct-add-row { display: flex; gap: 8px; }
+.ct-add-row .ct-input { flex: 1; }
+.ct-add-btn { height: 46px; min-width: 60px; border-radius: 10px; border: none; background: #1a1a1a; color: #fff; font-size: 22px; font-weight: 300; cursor: pointer; }
+.ct-add-btn:active { background: #333; }
+.ct-member-list { background: #fff; border-radius: 12px; border: 1px solid #e0ddd5; max-height: 200px; overflow-y: auto; }
+.ct-member-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f0ede8; }
+.ct-member-item:last-child { border-bottom: none; }
+.ct-member-name { flex: 1; font-size: 14px; font-weight: 500; }
+.ct-member-del { background: none; border: none; color: #c0392b; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+.ct-empty { font-size: 13px; color: #bbb; text-align: center; padding: 18px; }
+.ct-footer { display: flex; gap: 8px; }
+.ct-footer .btn { flex: 1; height: 48px; font-size: 15px; }
+
+/* Front Page */
+.fp-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000; background: #f5f4f0; display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 0; overflow-y: auto; }
+.fp-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px 24px; text-align: center; }
+.fp-ball { font-size: 72px; line-height: 1; margin-bottom: 20px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.13)); }
+.fp-title { font-size: 30px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; margin-bottom: 8px; }
+.fp-sub { font-size: 15px; color: #888; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 28px; }
+.fp-desc { font-size: 16px; color: #444; line-height: 1.65; max-width: 340px; }
+.fp-features { width: 100%; max-width: 400px; padding: 0 24px 0; display: flex; flex-direction: column; gap: 12px; }
+.fp-feature { display: flex; align-items: flex-start; gap: 14px; background: #fff; border-radius: 14px; border: 1px solid #e8e5de; padding: 14px 16px; }
+.fp-feature-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+.fp-feature-text { display: flex; flex-direction: column; gap: 2px; }
+.fp-feature-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+.fp-feature-desc { font-size: 13px; color: #777; line-height: 1.4; }
+.fp-cta { width: 100%; max-width: 400px; padding: 24px 24px 40px; }
+.fp-cta-btn { width: 100%; padding: 18px; border-radius: 14px; border: none; background: #1a1a1a; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; letter-spacing: 0.01em; }
+.fp-cta-btn:active { background: #333; transform: scale(0.98); }
+.fp-hint { text-align: center; font-size: 12px; color: #bbb; margin-top: 10px; }
+
+/* 4 Gewinnt */
+.vg-wrap { background: #1a1a2e; border-radius: 12px; padding: 10px; margin-bottom: 2px; }
+.vg-board { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-bottom: 6px; }
+.vg-cell { aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,0.1); }
+.vg-cell.t1 { background: #2980d9; }
+.vg-cell.t2 { background: #e74c3c; }
+.vg-cell.win-cell { background: #f1c40f; box-shadow: 0 0 0 2px #f39c12; }
+.vg-col-btns { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
+.vg-col-btn { aspect-ratio: 1; border-radius: 7px; border: none; background: rgba(255,255,255,0.18); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+.vg-col-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.88); }
+.vg-col-btn:disabled { opacity: 0.22; pointer-events: none; }
+.vg-pumpe-row { margin: 8px 0 0; }
+.vg-pumpe-btn { width: 100%; padding: 11px; border-radius: 9px; border: 1.5px solid #e0a0a0; background: #fff8f8; color: #c0392b; font-size: 14px; font-weight: 600; cursor: pointer; }
+.vg-pumpe-btn:active { background: #fde8e8; }
+.vg-turn-badge { text-align: center; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 8px; margin-bottom: 10px; }
+.vg-turn-badge.t1 { background: #dceeff; color: #1a6bc0; }
+.vg-turn-badge.t2 { background: #ffdddd; color: #c01a1a; }
+.vg-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 15px; font-weight: 600; }
+
+/* Busfahren */
+.bf-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 8px; }
+.bf-num-btn { height: 52px; border-radius: 10px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 22px; font-weight: 800; cursor: pointer; color: #1a1a1a; }
+.bf-num-btn:active { background: #1a1a1a; color: #fff; transform: scale(0.93); }
+.bf-num-btn:disabled { opacity: 0.3; pointer-events: none; }
+.bf-pumpe-btn { width: 100%; height: 46px; border-radius: 10px; border: 1.5px solid #e0a0a0; background: #fff8f8; color: #c0392b; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+.bf-pumpe-btn:active { background: #fde8e8; }
+.bf-pumpe-btn:disabled { opacity: 0.3; pointer-events: none; }
+.bf-turn-badge { text-align: center; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; background: #f0ede8; color: #1a1a1a; }
+.bf-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 10px; padding: 14px; margin-bottom: 14px; font-size: 16px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div id="front-page" class="fp-overlay">
+  <div class="fp-hero">
+    <div class="fp-ball">🎳</div>
+    <div class="fp-title">Kegel Spiele</div>
+    <div class="fp-sub">Spieleabend-App</div>
+    <p class="fp-desc">Eine App für euren Kegelabend — beliebte Kegelspiele, direkt erklärt und automatisch ausgewertet.</p>
+  </div>
+
+  <div class="fp-features">
+    <div class="fp-feature">
+      <div class="fp-feature-icon">📖</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Erklärungen inklusive</div>
+        <div class="fp-feature-desc">Jedes Spiel hat eine kurze Anleitung — ideal für Neulinge und als Auffrischung.</div>
+      </div>
+    </div>
+    <div class="fp-feature">
+      <div class="fp-feature-icon">🏆</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Automatische Auswertung</div>
+        <div class="fp-feature-desc">Punkte eintragen, auf „Auswerten" drücken — die App zeigt sofort wer verloren hat.</div>
+      </div>
+    </div>
+    <div class="fp-feature">
+      <div class="fp-feature-icon">👥</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Flexibel für jede Runde</div>
+        <div class="fp-feature-desc">Wählt euren Club oder erstellt ein neues Team mit eigenen Namen — und los geht's.</div>
+      </div>
+    </div>
+    <div class="fp-feature">
+      <div class="fp-feature-icon">🎯</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Alle Spiele sind „In die Vollen"</div>
+        <div class="fp-feature-desc">Tannenbaum, Abräumen, Bis 100, Blackjack, 4 Gewinnt und mehr.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fp-cta">
+    <button class="fp-cta-btn" onclick="showClubSelector()">Team auswählen &amp; loslegen →</button>
+    <div class="fp-hint">Blackout Boys · Harske Bössels · Eigenes Team</div>
+  </div>
+</div>
+
+<div id="club-selector" class="club-selector-overlay">
+
+  <!-- Clubauswahl -->
+  <div id="club-cards-view" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:480px;">
+    <div class="club-selector-title">🎳 Welcher Club?</div>
+    <div class="club-selector-sub">Wählt euren Club für diesen Abend</div>
+    <div class="club-cards">
+      <div class="club-card" onclick="selectClub('bb')">
+        <div class="club-badge-lg" style="background:#1a5c2a;">BB</div>
+        <div class="club-card-name">Blackout Boys</div>
+        <div class="club-card-count">15 Mitglieder</div>
+      </div>
+      <div class="club-card" onclick="selectClub('hb')">
+        <div class="club-badge-lg" style="background:#1a3575;">HB</div>
+        <div class="club-card-name">Harske Bössels</div>
+        <div class="club-card-count">17 Mitglieder</div>
+      </div>
+      <div class="club-card" onclick="showCustomTeamForm()">
+        <div class="club-badge-lg" style="background:#7c4daa;font-size:28px;letter-spacing:0;">✏️</div>
+        <div class="club-card-name">Neues Team</div>
+        <div class="club-card-count">Eigene Namen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Eigenes Team erstellen -->
+  <div id="custom-team-view" class="ct-view">
+    <button class="ct-back" onclick="backToClubs()">← Zurück</button>
+    <div class="ct-heading">✏️ Neues Team</div>
+
+    <div>
+      <div class="ct-label" style="margin-bottom:6px;">Teamname</div>
+      <input id="ct-name-inp" class="ct-input" type="text" placeholder="z.B. Kegel-Freunde" maxlength="30" autocomplete="off">
+    </div>
+
+    <div>
+      <div class="ct-label" style="margin-bottom:6px;">Spieler hinzufügen</div>
+      <div class="ct-add-row">
+        <input id="ct-member-inp" class="ct-input" type="text" placeholder="Name..." maxlength="25" autocomplete="off"
+          onkeydown="if(event.key==='Enter')addCustomMember()">
+        <button class="ct-add-btn" onclick="addCustomMember()">+</button>
+      </div>
+    </div>
+
+    <div id="ct-member-list" class="ct-member-list">
+      <div class="ct-empty">Noch keine Spieler hinzugefügt</div>
+    </div>
+
+    <div class="ct-footer">
+      <button class="btn" onclick="backToClubs()">Abbrechen</button>
+      <button id="ct-start-btn" class="btn btn-primary" onclick="confirmCustomTeam()" disabled>Starten</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a href="index.html" class="btn" style="font-size:12px;padding:5px 10px;text-decoration:none;flex-shrink:0;">← Zurück</a>
+    <div id="topbar-logo-bb" style="display:none;width:36px;height:36px;border-radius:6px;background:#1a5c2a;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-1px;">BB</div>
+    <div id="topbar-logo-hb" style="display:none;width:36px;height:36px;border-radius:6px;background:#1a3575;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-1px;">HB</div>
+    <div id="topbar-logo-custom" style="display:none;width:36px;height:36px;border-radius:6px;background:#7c4daa;align-items:center;justify-content:center;font-size:18px;">✏️</div>
+    <div>
+      <div id="topbar-club-name" style="font-size:15px;font-weight:700;line-height:1.15;">Kegel Spiele</div>
+      <div style="font-size:10px;color:#888;font-weight:500;letter-spacing:0.04em;">SPIELE-APP</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-danger" onclick="confirmReset()">Reset</button>
+  </div>
+</div>
+
+<div id="presence-panel" class="presence-panel" style="display:none;">
+  <div class="presence-label">Anwesend — tippen zum An-/Abmelden</div>
+  <div class="presence-chips" id="presence-chips"></div>
+</div>
+
+<div class="spiele-page" id="spiele-content"></div>
+
+<script>
+const COLORS = ['#E8D5B7','#B7D5E8','#D5E8B7','#E8B7D5','#D5B7E8','#E8C8B7','#B7E8D5','#E8E8B7','#C8B7E8','#B7C8E8','#E8D5C8','#C8E8B7'];
+
+const CLUBS = {
+  bb: { id:'bb', name:'Blackout Boys', color:'#1a5c2a', members:['Jansen','Lehmann','Wübben','Dimi','Hannes','Heinrich','Jan','Lukas','Matze','Runde','Eiken','Thorben','Laurenz','Sebastian','Kossen'] },
+  hb: { id:'hb', name:'Harske Bössels', color:'#1a3575', members:['Nils','Jonas','Steffen','Marcel','Arling','Laui','Nico','Pinkernell','Wiktor','Henrik','Alex','Andre','Dennis','Arthur','Lukas','Simon','Tim'] },
+};
+
+let state = {
+  selectedClub: null,
+  spieler: [],
+  anwesend: [],
+  spiele: [
+    { id:'hohe-hausnummer', name:'Hohe Hausnummer', mode:'hoch', type:'hausnummer', loserCount:3, scores:{}, showResult:false, penaltiesApplied:false,
+      desc:'Jeder Spieler hat 3 Würfe. Nach jedem Wurf entscheidet der Kegler, ob die Punktzahl an die erste, mittlere oder letzte Stelle kommt — die gewählte Position darf danach nicht mehr geändert werden. Wenn alle geworfen haben auf „Auswerten" drücken. Die Spieler mit der <strong>niedrigsten Hausnummer</strong> verlieren.' },
+    { id:'tiefe-hausnummer', name:'Tiefe Hausnummer', mode:'tief', type:'hausnummer', loserCount:3, scores:{}, showResult:false, penaltiesApplied:false,
+      desc:'Gleiche Regeln wie Hohe Hausnummer — 3 Würfe, nach jedem Wurf wird die Stelle (vorne, mitte, hinten) festgelegt. Die gewählte Reihenfolge darf nicht geändert werden. Die Spieler mit der <strong>höchsten Hausnummer</strong> verlieren.' },
+  ],
+  tannenbaum: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], tree1:new Array(25).fill(false), tree2:new Array(25).fill(false) },
+  abräumen: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], teams:[{throws:0,first:false,done:false},{throws:0,first:false,done:false}] },
+  bis100: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], teams:[{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''},{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''}] },
+  blackjack: { open:false, loserCount:1, showResult:false, players:{} },
+  tagnacht: { open:false, loserCount:1, showResult:false, scores:{} },
+  bergtal: { open:false, loserCount:1, showResult:false, scores:{} },
+  madn: { open:false, order:[], scores:{}, currentTurn:0, winner:null, lastReset:[] },
+  vierGewinnt: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], currentTeam:0, board:Array.from({length:9},()=>new Array(9).fill(null)), winner:null, winCells:[], lastDrop:null },
+  busfahren: { open:false, phase:'order', playerOrder:[], assignments:{}, currentAssignIdx:0, buses:{}, currentThrowIdx:0, winner:null, log:[] },
+};
+
+function applyGamePenalty() { /* Keine Strafen — no-op */ }
+
+function initials(name) { return name.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function avatarColor(name) { let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
+function esc(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function esc2(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+function toggleAnwesend(s) {
+  if (state.anwesend.includes(s)) {
+    state.anwesend = state.anwesend.filter(p => p !== s);
+    state.tannenbaum.team1 = state.tannenbaum.team1.filter(p => p !== s);
+    state.tannenbaum.team2 = state.tannenbaum.team2.filter(p => p !== s);
+    state.abräumen.team1 = state.abräumen.team1.filter(p => p !== s);
+    state.abräumen.team2 = state.abräumen.team2.filter(p => p !== s);
+    state.bis100.team1 = state.bis100.team1.filter(p => p !== s);
+    state.bis100.team2 = state.bis100.team2.filter(p => p !== s);
+    state.vierGewinnt.team1 = state.vierGewinnt.team1.filter(p => p !== s);
+    state.vierGewinnt.team2 = state.vierGewinnt.team2.filter(p => p !== s);
+  } else {
+    state.anwesend.push(s);
+  }
+  renderAll();
+}
+
+function renderPresence() {
+  const chips = document.getElementById('presence-chips');
+  if (!chips) return;
+  chips.innerHTML = state.spieler.map(s => {
+    const da = state.anwesend.includes(s);
+    return `<div class="presence-chip ${da?'da':'weg'}" onclick="toggleAnwesend('${esc(s)}')">
+      <div class="chip-avatar" style="background:${avatarColor(s)}">${initials(s)}</div>
+      ${s.trim()}
+    </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  if (!state.selectedClub) return;
+  renderPresence();
+  renderSpiele();
+}
+
+// ── renderSpiele ──────────────────────────────────────────────
+function renderSpiele() {
+  const c = document.getElementById('spiele-content');
+  if (!c) return;
+  let html = '';
+  state.spiele.forEach((g, gi) => {
+    const modeLabel = g.mode === 'hoch' ? 'Niedrigste Zahl verliert' : 'Höchste Zahl verliert';
+    const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+    const isHN = g.type === 'hausnummer';
+    const allFilled = aktiv.length > 0 && aktiv.every(s => {
+      if (isHN) { const sc = g.scores[s]||{}; return sc.h && sc.z && sc.e; }
+      return g.scores[s] !== undefined && g.scores[s] !== '';
+    });
+    html += `<div class="spiel-card">
+      <div class="spiel-header" onclick="toggleSpiel(${gi})">
+        <div><div class="spiel-title">${g.name}</div><div class="spiel-meta">${modeLabel} &nbsp;·&nbsp; ${g.loserCount} Verlierer</div></div>
+        <span class="spiel-chevron${g.open?' open':''}">&#8964;</span>
+      </div>
+      <div class="spiel-body${g.open?' open':''}">
+        ${g.desc ? `<div class="spiel-desc">${g.desc}</div>` : ''}
+        <div class="loser-count-row">
+          <span class="loser-count-label">Anzahl Verlierer</span>
+          <div class="stepper">
+            <button class="stepper-btn" onclick="changeLoser(${gi},-1)">−</button>
+            <span class="stepper-val">${g.loserCount}</span>
+            <button class="stepper-btn" onclick="changeLoser(${gi},1)">+</button>
+          </div>
+        </div>
+        ${isHN ? '<div class="hn-legend">Hundert &nbsp;·&nbsp; Zehn &nbsp;·&nbsp; Einer &nbsp;→&nbsp; z.B. 3 · 7 · 9 = <strong>379</strong></div>' : ''}
+        ${aktiv.map(s => {
+          if (isHN) {
+            const sc = g.scores[s]||{};
+            const num = (sc.h&&sc.z&&sc.e) ? `${sc.h}${sc.z}${sc.e}` : '';
+            return `<div class="score-row">
+              <div class="score-name"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div>${s.trim()}</div>
+              <div class="hn-inputs">
+                <input class="hn-digit" type="number" inputmode="numeric" min="1" max="9" placeholder="H" value="${sc.h||''}" oninput="setHNScore(${gi},'${esc(s)}','h',this.value)">
+                <span class="hn-sep">·</span>
+                <input class="hn-digit" type="number" inputmode="numeric" min="1" max="9" placeholder="Z" value="${sc.z||''}" oninput="setHNScore(${gi},'${esc(s)}','z',this.value)">
+                <span class="hn-sep">·</span>
+                <input class="hn-digit" type="number" inputmode="numeric" min="1" max="9" placeholder="E" value="${sc.e||''}" oninput="setHNScore(${gi},'${esc(s)}','e',this.value)">
+                <span class="hn-result">${num ? '= '+num : ''}</span>
+              </div>
+            </div>`;
+          }
+          const val = g.scores[s] !== undefined ? g.scores[s] : '';
+          return `<div class="score-row">
+            <div class="score-name"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div>${s.trim()}</div>
+            <input class="score-input" type="number" inputmode="numeric" id="sc-${gi}-${esc2(s)}" value="${val}" placeholder="–" onchange="setScore(${gi},'${esc(s)}',this.value)" oninput="setScore(${gi},'${esc(s)}',this.value)">
+          </div>`;
+        }).join('')}
+        <div class="spiel-actions">
+          <button class="btn btn-danger" onclick="resetSpiel(${gi})">Zurücksetzen</button>
+          <button class="btn btn-primary" onclick="auswerten(${gi})" ${!allFilled?'style="opacity:0.5;"':''}>Auswerten</button>
+        </div>
+        ${g.showResult ? renderResult(g) : ''}
+      </div>
+    </div>`;
+  });
+  html += renderTannenbaumCard();
+  html += renderAbraeumenCard();
+  html += renderBis100Card();
+  html += renderBlackjackCard();
+  html += renderTagNachtCard();
+  html += renderBergTalCard();
+  html += renderMadnCard();
+  html += renderVierGewinntCard();
+  html += renderBusfahrenCard();
+  c.innerHTML = html;
+}
+
+function getSpielScore(g, s) {
+  if (g.type === 'hausnummer') {
+    const sc = g.scores[s]||{};
+    if (!sc.h||!sc.z||!sc.e) return null;
+    return parseInt(`${sc.h}${sc.z}${sc.e}`);
+  }
+  const v = parseFloat(g.scores[s]);
+  return isNaN(v) ? null : v;
+}
+function renderResult(g) {
+  const ranked = state.spieler.filter(s=>state.anwesend.includes(s)&&getSpielScore(g,s)!==null)
+    .map(s=>({name:s,score:getSpielScore(g,s)}))
+    .sort((a,b)=>g.mode==='tief'?a.score-b.score:b.score-a.score);
+  const n = Math.min(g.loserCount, ranked.length);
+  let html = '<div class="result-list">';
+  ranked.forEach((p,i) => {
+    const isLoser = i >= ranked.length-n, isTop = i===0;
+    html += `<div class="result-row${isLoser?' loser':isTop?' top':''}">
+      <span class="result-rank">${i+1}.</span>
+      <span class="result-name">${p.name.trim()}</span>
+      ${isLoser?'<span class="loser-badge">Verlierer</span>':isTop?'<span class="winner-tag">1. Platz</span>':''}
+      <span class="result-score">${p.score}</span>
+    </div>`;
+  });
+  return html + '</div>';
+}
+function toggleSpiel(gi) { state.spiele[gi].open=!state.spiele[gi].open; renderSpiele(); }
+function changeLoser(gi,d) { state.spiele[gi].loserCount=Math.max(1,state.spiele[gi].loserCount+d); renderSpiele(); }
+function setHNScore(gi,s,pos,val) {
+  const v=parseInt(val);
+  if (!state.spiele[gi].scores[s]) state.spiele[gi].scores[s]={};
+  state.spiele[gi].scores[s][pos]=(val===''||isNaN(v))?'':Math.min(9,Math.max(1,v));
+  state.spiele[gi].showResult=false; renderSpiele();
+}
+function setScore(gi,s,val) { state.spiele[gi].scores[s]=val; state.spiele[gi].showResult=false; }
+function auswerten(gi) { state.spiele[gi].showResult=true; renderSpiele(); }
+function resetSpiel(gi) { state.spiele[gi].scores={}; state.spiele[gi].showResult=false; renderSpiele(); }
+
+// ── Tannenbaum ────────────────────────────────────────────────
+const TREE_ROWS = [[9],[8,8],[7,7,7],[6,6,6,6],[5,5,5,5,5],[4,4,4,4],[3,3,3],[2,2],[1]];
+const TREE_ROW_START = [0,1,3,6,10,15,19,22,24];
+
+function renderTannenbaumCard() {
+  const tb = state.tannenbaum;
+  const n1=tb.teamName1||'Team 1', n2=tb.teamName2||'Team 2';
+  const assigned1=tb.team1.length, assigned2=tb.team2.length;
+  const metaLabel=(assigned1+assigned2>0)?`${n1}: ${assigned1} · ${n2}: ${assigned2} Spieler`:'Spieler noch nicht eingeteilt';
+  const done1=tb.tree1.filter(Boolean).length, done2=tb.tree2.filter(Boolean).length;
+  const allDone1=done1===25, allDone2=done2===25;
+
+  let html = `<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleTanne()">
+      <div><div class="spiel-title">Tannenbaum</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${tb.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${tb.open?' open':''}">
+    <div class="spiel-desc">Teilt die Spieler auf 2 Teams auf oder drückt auf „Zufällig aufteilen". Der erste Spieler von Team 1 wirft und tippt auf die Zahl, die er geworfen hat. Dann ist der erste Spieler von Team 2 dran. Sollten alle Zahlen einer Gruppe bereits weggestrichen sein, tippt ihr die Zahl beim gegnerischen Team an. Ziel: den eigenen Tannenbaum <strong>zuerst vollständig abräumen</strong>.</div>
+    <div class="team-names-row">
+      <div class="team-name-field">
+        <span class="team-name-label t1">Teamname 1</span>
+        <input class="team-name-input t1" type="text" maxlength="20" value="${esc(n1)}" oninput="state.tannenbaum.teamName1=this.value;renderSpiele()" placeholder="Team 1">
+      </div>
+      <div class="team-name-field">
+        <span class="team-name-label t2">Teamname 2</span>
+        <input class="team-name-input t2" type="text" maxlength="20" value="${esc(n2)}" oninput="state.tannenbaum.teamName2=this.value;renderSpiele()" placeholder="Team 2">
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">MANNSCHAFTEN — tippen zum Wechseln</div>
+    <div class="tanne-teams">
+      <div class="tanne-team-col">
+        <div class="tanne-team-label tanne-team1-label">${n1}</div>
+        ${tb.team1.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team1" onclick="tanneAssign('${esc(s)}',2)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
+      </div>
+      <div class="tanne-team-col">
+        <div class="tanne-team-label tanne-team2-label">${n2}</div>
+        ${tb.team2.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team2" onclick="tanneAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
+      </div>
+    </div>`;
+
+  const unassigned=state.spieler.filter(s=>state.anwesend.includes(s)&&!tb.team1.includes(s)&&!tb.team2.includes(s));
+  if (unassigned.length) {
+    html += `<div style="font-size:12px;font-weight:600;color:#888;margin-bottom:6px;">NICHT ZUGETEILT</div><div class="tanne-players-row">`;
+    html += unassigned.map(s=>`<div class="tanne-player-chip chip-unassigned" onclick="tanneAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()} <span style="font-size:10px;color:#1a6bc0;">→ T1</span></div>`).join('');
+    html += `</div>`;
+  }
+
+  html += `<div class="tanne-trees">
+    <div class="tanne-tree-wrap">
+      <div class="tanne-tree-title t1">${n1}</div>
+      ${renderTree(tb.tree1,'t1',1)}
+      <div class="tanne-progress">${done1} / 25</div>
+    </div>
+    <div class="tanne-tree-wrap">
+      <div class="tanne-tree-title t2">${n2}</div>
+      ${renderTree(tb.tree2,'t2',2)}
+      <div class="tanne-progress">${done2} / 25</div>
+    </div>
+  </div>`;
+
+  if (allDone1||allDone2) {
+    html += `<div class="tanne-winner-banner">${allDone1&&allDone2?'Unentschieden!':(allDone1?n1:n2)+' gewinnt!'}</div>`;
+  }
+  html += `<div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-danger" onclick="resetTanne()" style="flex:1;">Zurücksetzen</button>
+    <button class="btn" onclick="autoSplitTeams()" style="flex:1;">Zufällig aufteilen</button>
+  </div></div></div>`;
+  return html;
+}
+
+function renderTree(cells, teamClass, teamNum) {
+  let html='';
+  TREE_ROWS.forEach((row,ri)=>{
+    html+=`<div class="tanne-row">`;
+    row.forEach((val,ci)=>{
+      const idx=TREE_ROW_START[ri]+ci, done=cells[idx];
+      html+=`<div class="tanne-cell ${teamClass}-${done?'done':'active'}" onclick="tanneCell(${teamNum},${idx})">${val}</div>`;
+    });
+    html+=`</div>`;
+  });
+  return html;
+}
+
+function toggleTanne() { state.tannenbaum.open=!state.tannenbaum.open; renderSpiele(); }
+function tanneAssign(s,toTeam) {
+  const tb=state.tannenbaum;
+  tb.team1=tb.team1.filter(p=>p!==s); tb.team2=tb.team2.filter(p=>p!==s);
+  if(toTeam===1) tb.team1.push(s); else tb.team2.push(s); renderSpiele();
+}
+function tanneCell(teamNum,idx) {
+  const tb=state.tannenbaum;
+  const cells=teamNum===1?tb.tree1:tb.tree2;
+  cells[idx]=!cells[idx];
+  if(navigator.vibrate) navigator.vibrate(15);
+  renderSpiele();
+}
+function resetTanne() {
+  state.tannenbaum.tree1=new Array(25).fill(false);
+  state.tannenbaum.tree2=new Array(25).fill(false);
+  renderSpiele();
+}
+function autoSplitTeams() {
+  const shuffled=[...state.spieler].sort(()=>Math.random()-0.5);
+  const half=Math.ceil(shuffled.length/2);
+  state.tannenbaum.team1=shuffled.slice(0,half);
+  state.tannenbaum.team2=shuffled.slice(half);
+  renderSpiele();
+}
+
+// ── 2x Abräumen ──────────────────────────────────────────────
+function renderAbraeumenCard() {
+  const ab=state.abräumen;
+  const t1=ab.teams[0], t2=ab.teams[1];
+  const bothDone=t1.done&&t2.done, anyDone=t1.done||t2.done;
+  const an1=ab.teamName1||'Team 1', an2=ab.teamName2||'Team 2';
+  let metaLabel=ab.team1.length||ab.team2.length?`${an1}: ${ab.team1.length} · ${an2}: ${ab.team2.length} Spieler`:'Spieler noch nicht eingeteilt';
+
+  let html=`<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleAbr()">
+      <div><div class="spiel-title">2x Abräumen</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${ab.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${ab.open?' open':''}">
+    <div class="spiel-desc">Stellt die Kegelbahn auf „Abräumen".<br><br>Teilt die zwei Mannschaften ein und vergebt einen Namen oder klickt auf „Zufällig aufteilen".<br><br>${an1} fängt an und wirft so oft, bis sie das Bild abgeräumt haben. Pro Wurf erhöht ihr die Zahl um einen Punkt. Nachdem ihr das erste Mal abgeräumt habt, klickt ihr auf <strong>„1x abgeräumt"</strong>. Nachdem ihr das zweite Mal abgeräumt habt, klickt ihr auf <strong>„2x abgeräumt"</strong>.<br><br>Nun spielt ${an2} mit identischen Regeln. Das Team mit weniger Würfen gewinnt.</div>
+    <div class="team-names-row">
+      <div class="team-name-field"><span class="team-name-label t1">Teamname 1</span><input class="team-name-input t1" type="text" maxlength="20" value="${esc(an1)}" oninput="state.abräumen.teamName1=this.value;renderSpiele()" placeholder="Team 1"></div>
+      <div class="team-name-field"><span class="team-name-label t2">Teamname 2</span><input class="team-name-input t2" type="text" maxlength="20" value="${esc(an2)}" oninput="state.abräumen.teamName2=this.value;renderSpiele()" placeholder="Team 2"></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">MANNSCHAFTEN — tippen zum Wechseln</div>
+    <div class="tanne-teams">
+      <div class="tanne-team-col">
+        <div class="tanne-team-label tanne-team1-label">${an1}</div>
+        ${ab.team1.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team1" onclick="abrAssign('${esc(s)}',2)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
+      </div>
+      <div class="tanne-team-col">
+        <div class="tanne-team-label tanne-team2-label">${an2}</div>
+        ${ab.team2.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team2" onclick="abrAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
+      </div>
+    </div>`;
+
+  const unassigned=state.spieler.filter(s=>state.anwesend.includes(s)&&!ab.team1.includes(s)&&!ab.team2.includes(s));
+  if(unassigned.length) html+=`<div style="font-size:12px;font-weight:600;color:#888;margin:8px 0 6px;">NICHT ZUGETEILT</div><div class="tanne-players-row">${unassigned.map(s=>`<div class="tanne-player-chip chip-unassigned" onclick="abrAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()} <span style="font-size:10px;color:#1a6bc0;">→ ${an1}</span></div>`).join('')}</div>`;
+
+  html+=`<div class="abr-teams">`;
+  [0,1].forEach(i=>{
+    const t=ab.teams[i], cls=i===0?'t1':'t2', label=i===0?an1:an2;
+    html+=`<div class="abr-team-box ${cls}${t.done?' done-box':''}">
+      <div class="abr-team-name">${label}</div>
+      <div class="abr-throws">
+        <button class="abr-btn-throw minus" onclick="abrThrow(${i},-1)">−</button>
+        <div><div class="abr-throw-num">${t.throws}</div><div class="abr-throw-label">Würfe</div></div>
+        <button class="abr-btn-throw" onclick="abrThrow(${i},1)">+</button>
+      </div>
+      <div class="abr-milestone-btns">
+        <button class="abr-milestone ${t.first?'first-done':'first-inactive'}" onclick="abrMilestone(${i},'first')">${t.first?'1x abgeräumt ✓':'1x abgeräumt'}</button>
+        <button class="abr-milestone ${t.done?'second-done':'second-inactive'}" onclick="abrMilestone(${i},'done')" ${!t.first&&!t.done?'style="opacity:0.5;"':''}>${t.done?'2x abgeräumt ✓':'2x abgeräumt'}</button>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  if(anyDone) {
+    let winText='';
+    if(bothDone) { winText=t1.throws===t2.throws?'Unentschieden!':(t1.throws<t2.throws?an1:an2)+' gewinnt mit weniger Würfen!'; }
+    else { winText=(t1.done?an1:an2)+' hat zuerst 2x abgeräumt!'; }
+    html+=`<div class="abr-winner-banner">${winText}</div>`;
+  }
+
+  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-danger" onclick="resetAbr()" style="flex:1;">Zurücksetzen</button>
+    <button class="btn" onclick="autoSplitAbr()" style="flex:1;">Zufällig aufteilen</button>
+  </div></div></div>`;
+  return html;
+}
+
+function toggleAbr() { state.abräumen.open=!state.abräumen.open; renderSpiele(); }
+function abrAssign(s,toTeam) {
+  const ab=state.abräumen;
+  ab.team1=ab.team1.filter(p=>p!==s); ab.team2=ab.team2.filter(p=>p!==s);
+  if(toTeam===1) ab.team1.push(s); else ab.team2.push(s); renderSpiele();
+}
+function abrThrow(i,d) {
+  state.abräumen.teams[i].throws=Math.max(0,state.abräumen.teams[i].throws+d);
+  if(navigator.vibrate) navigator.vibrate(15); renderSpiele();
+}
+function abrMilestone(i,which) {
+  const t=state.abräumen.teams[i];
+  if(which==='first') { t.first=!t.first; if(!t.first) t.done=false; }
+  else { if(!t.first) return; t.done=!t.done; }
+  renderSpiele();
+}
+function resetAbr() {
+  state.abräumen.teams=[{throws:0,first:false,done:false},{throws:0,first:false,done:false}];
+  renderSpiele();
+}
+function autoSplitAbr() {
+  const shuffled=[...state.spieler].sort(()=>Math.random()-0.5);
+  const half=Math.ceil(shuffled.length/2);
+  state.abräumen.team1=shuffled.slice(0,half);
+  state.abräumen.team2=shuffled.slice(half);
+  renderSpiele();
+}
+
+// ── Bis 100 ───────────────────────────────────────────────────
+const SCHNAPSZAHLEN = new Set([11,22,33,44,55,66,77,88,99]);
+
+function renderBis100Card() {
+  const b=state.bis100;
+  const t1=b.teams[0], t2=b.teams[1], anyWon=t1.won||t2.won;
+  const bn1=b.teamName1||'Team 1', bn2=b.teamName2||'Team 2';
+  let metaLabel=b.team1.length||b.team2.length?`${bn1}: ${b.team1.length} · ${bn2}: ${b.team2.length} Spieler`:'Spieler noch nicht eingeteilt';
+
+  let html=`<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleBis100()">
+      <div><div class="spiel-title">Bis 100</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${b.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${b.open?' open':''}">
+    <div class="spiel-desc">Ihr teilt euch auf 2 Teams auf oder klickt auf „Zufällig aufteilen".<br><br>${bn1} startet und wirft. Wählt die Zahl, die ihr geworfen habt, und erhöht damit euren Punktestand.<br><br>Solltet ihr mit eurem Wurf eine <strong>Schnapszahl</strong> treffen, wird der Punktestand auf <strong>0 zurückgesetzt</strong>. Eine <strong>Pumpe zählt 0</strong>.<br><br>Das Team, welches zuerst <strong>100 Punkte</strong> erreicht, gewinnt das Spiel.</div>
+    <div class="team-names-row">
+      <div class="team-name-field"><span class="team-name-label t1">Teamname 1</span><input class="team-name-input t1" type="text" maxlength="20" value="${esc(bn1)}" oninput="state.bis100.teamName1=this.value;renderSpiele()" placeholder="Team 1"></div>
+      <div class="team-name-field"><span class="team-name-label t2">Teamname 2</span><input class="team-name-input t2" type="text" maxlength="20" value="${esc(bn2)}" oninput="state.bis100.teamName2=this.value;renderSpiele()" placeholder="Team 2"></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">MANNSCHAFTEN — tippen zum Wechseln</div>
+    <div class="tanne-teams">
+      <div class="tanne-team-col">
+        <div class="tanne-team-label tanne-team1-label">${bn1}</div>
+        ${b.team1.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team1" onclick="b100Assign('${esc(s)}',2)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
+      </div>
+      <div class="tanne-team-col">
+        <div class="tanne-team-label tanne-team2-label">${bn2}</div>
+        ${b.team2.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team2" onclick="b100Assign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
+      </div>
+    </div>`;
+
+  const unassigned=state.spieler.filter(s=>state.anwesend.includes(s)&&!b.team1.includes(s)&&!b.team2.includes(s));
+  if(unassigned.length) html+=`<div style="font-size:12px;font-weight:600;color:#888;margin:8px 0 6px;">NICHT ZUGETEILT</div><div class="tanne-players-row">${unassigned.map(s=>`<div class="tanne-player-chip chip-unassigned" onclick="b100Assign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()} <span style="font-size:10px;color:#1a6bc0;">→ ${bn1}</span></div>`).join('')}</div>`;
+
+  html+=`<div class="b100-teams">`;
+  [0,1].forEach(i=>{
+    const t=b.teams[i], cls=i===0?'t1':'t2', label=i===0?bn1:bn2;
+    const flashCls=t.flashMsg?' flash-reset':'', wonCls=t.won?' won':'', dis=t.won?' disabled':'';
+    html+=`<div class="b100-team-box ${cls}${flashCls}${wonCls}">
+      <div class="b100-team-name">${label}</div>
+      <div class="b100-score">${t.won?'100+':t.score}</div>
+      <div class="b100-score-label">${t.won?'Fertig!':'Punkte'}</div>
+      <div class="b100-stats">
+        <div class="b100-stat"><div class="b100-stat-num">${t.throwsSinceReset}</div><div class="b100-stat-label">seit letztem Reset</div></div>
+        <div class="b100-stat"><div class="b100-stat-num">${t.totalThrows}</div><div class="b100-stat-label">gesamt</div></div>
+      </div>
+      <div class="b100-reset-msg">${t.flashMsg||''}</div>
+      <div class="b100-numpad">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="b100-num-btn${dis}" onclick="b100Add(${i},${n})">${n}</button>`).join('')}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  if(anyWon) {
+    let winText='';
+    if(t1.won&&t2.won) { winText=t1.totalThrows===t2.totalThrows?'Unentschieden!':(t1.totalThrows<t2.totalThrows?bn1:bn2)+' gewinnt mit weniger Würfen!'; }
+    else { winText=(t1.won?bn1:bn2)+' hat 100 erreicht!'; }
+    html+=`<div class="b100-winner-banner">${winText}</div>`;
+  }
+
+  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-danger" onclick="resetBis100()" style="flex:1;">Zurücksetzen</button>
+    <button class="btn" onclick="autoSplitBis100()" style="flex:1;">Zufällig aufteilen</button>
+  </div></div></div>`;
+  return html;
+}
+
+function toggleBis100() { state.bis100.open=!state.bis100.open; renderSpiele(); }
+function b100Assign(s,toTeam) {
+  const b=state.bis100;
+  b.team1=b.team1.filter(p=>p!==s); b.team2=b.team2.filter(p=>p!==s);
+  if(toTeam===1) b.team1.push(s); else b.team2.push(s); renderSpiele();
+}
+function b100Add(i,n) {
+  const t=state.bis100.teams[i];
+  if(t.won) return;
+  const newScore=t.score+n;
+  t.totalThrows++; t.throwsSinceReset++;
+  if(SCHNAPSZAHLEN.has(newScore)) {
+    t.score=0; t.throwsSinceReset=0;
+    t.flashMsg=`${newScore} — Schnapszahl! Zurück auf 0`;
+    if(navigator.vibrate) navigator.vibrate([80,60,80]);
+    renderSpiele();
+    setTimeout(()=>{ t.flashMsg=''; renderSpiele(); },2000);
+  } else if(newScore>=100) {
+    t.score=newScore; t.won=true; t.flashMsg='';
+    if(navigator.vibrate) navigator.vibrate([50,30,50,30,100]);
+    renderSpiele();
+  } else {
+    t.score=newScore; t.flashMsg='';
+    if(navigator.vibrate) navigator.vibrate(15);
+    renderSpiele();
+  }
+}
+function resetBis100() {
+  state.bis100.teams=[{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''},{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''}];
+  renderSpiele();
+}
+function autoSplitBis100() {
+  const shuffled=[...state.spieler].sort(()=>Math.random()-0.5);
+  const half=Math.ceil(shuffled.length/2);
+  state.bis100.team1=shuffled.slice(0,half);
+  state.bis100.team2=shuffled.slice(half);
+  renderSpiele();
+}
+
+// ── Blackjack ─────────────────────────────────────────────────
+const BJ_CARDS=[
+  {id:'7',label:'7',sub:'',val:7,isAss:false},{id:'8',label:'8',sub:'',val:8,isAss:false},
+  {id:'9',label:'9',sub:'',val:9,isAss:false},{id:'10',label:'10',sub:'',val:10,isAss:false},
+  {id:'bube',label:'B',sub:'= 2',val:2,isAss:false},{id:'dame',label:'D',sub:'= 3',val:3,isAss:false},
+  {id:'koenig',label:'K',sub:'= 4',val:4,isAss:false},{id:'ass',label:'A',sub:'1 / 11',val:0,isAss:true},
+];
+function bjInitPlayer(s) {
+  if(!state.blackjack.players[s]) state.blackjack.players[s]={cardId:null,cardVal:0,throws:[],throwsTotal:0,total:0,done:false,revealed:false,busted:false,won:false,assChoice:null,assChoosing:false};
+}
+function renderBlackjackCard() {
+  const bj=state.blackjack;
+  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
+  aktiv.forEach(s=>bjInitPlayer(s));
+  const revCnt=aktiv.filter(s=>bj.players[s]?.revealed).length;
+  const bustCnt=aktiv.filter(s=>bj.players[s]?.busted).length;
+  const winCnt=aktiv.filter(s=>bj.players[s]?.won).length;
+  const metaLabel=revCnt>0?`${revCnt}/${aktiv.length} aufgedeckt · ${bustCnt} überworfen · ${winCnt}× 21`:`${aktiv.length} Spieler — Karte wählen, werfen, aufdecken`;
+
+  let html=`<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleBlackjack()">
+      <div><div class="spiel-title">Blackjack</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${bj.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${bj.open?' open':''}">
+    <div class="spiel-desc">Ein Einzelspiel. Jeder Spieler zieht eine Spielkarte. Bube = 2, Dame = 3, König = 4. Ein <strong>Ass zählt 1 oder 11</strong> — ihr entscheidet beim Aufdecken.<br><br>Der erste Spieler kommt zum Tablet und tippt seine Karte an. Die Karte bleibt <strong>verdeckt</strong>. Dann kegelt ihr so viele Würfe wie ihr wollt und tragt die Zahlen ein. Wenn ihr genug habt, klickt auf <strong>„Stehen"</strong>.<br><br>Ihr könnt mit dem Aufdecken bis zum Schluss warten — das erhöht die Spannung! Wer nach dem Aufdecken <strong>über 21</strong> ist, hat automatisch verloren. Wer <strong>genau 21</strong> hat, hat automatisch gewonnen.<br><br>Über den Button unten legt ihr fest, wie viele der verbleibenden Spieler (ohne Überworfene) noch verlieren.</div>
+    <div class="loser-count-row">
+      <span class="loser-count-label">Verlierer (außer Überworfene)</span>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="bjChangeLoser(-1)">−</button>
+        <span class="stepper-val">${bj.loserCount}</span>
+        <button class="stepper-btn" onclick="bjChangeLoser(1)">+</button>
+      </div>
+    </div>`;
+
+  aktiv.forEach(s=>{
+    const p=bj.players[s];
+    const cardSelected=p.cardId!==null;
+    const isActive=cardSelected&&!p.done&&!p.revealed&&!p.busted&&!p.won;
+    let statusHtml='',totalClass='';
+    if(p.busted){statusHtml=`<span class="bj-status bust">ÜBER!</span>`;totalClass=' bust';}
+    else if(p.won){statusHtml=`<span class="bj-status win21">21! ♠</span>`;totalClass=' win';}
+    else if(p.revealed){statusHtml=`<span class="bj-status done-st">Steht</span>`;}
+    else if(p.done){statusHtml=`<span class="bj-status done-st">Fertig</span>`;}
+    else if(cardSelected){statusHtml=`<span class="bj-status playing">Spielt</span>`;}
+    const displayVal=!cardSelected?'–':(p.revealed||p.busted||p.won)?p.total:p.throwsTotal>0?`${p.throwsTotal}`:'?';
+    let histParts=[];
+    if(p.revealed&&cardSelected){const c=BJ_CARDS.find(c=>c.id===p.cardId);p.throws.forEach(t=>histParts.push(String(t)));const cv=c?.isAss?p.assChoice:p.cardVal;histParts.push(c?`${c.label}(${cv})`:'')}
+    else if(cardSelected&&p.throws.length>0){p.throws.forEach(t=>histParts.push(String(t)));histParts.push(p.cardId==='ass'?'A(?)':'?');}
+    const histStr=histParts.length>1?histParts.join(' + ')+(p.revealed?` = ${p.total}`:''):'';
+
+    html+=`<div class="bj-player-section">
+      <div class="bj-player-header">
+        <div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div>
+        <span class="bj-player-name">${s.trim()}</span>
+        <span class="bj-total${totalClass}">${displayVal}</span>
+        ${statusHtml}
+      </div>`;
+
+    if(!cardSelected){
+      html+=`<div class="bj-card-picker">`;
+      BJ_CARDS.forEach(card=>{html+=`<button class="bj-card-btn" onclick="bjPickCard('${esc(s)}','${card.id}')">${card.label}<span class="bj-card-sub">${card.sub||card.val}</span></button>`;});
+      html+=`</div>`;
+    } else if(p.revealed||p.busted||p.won){
+      const c=BJ_CARDS.find(c=>c.id===p.cardId);
+      const vl=c?.isAss?`A = ${p.assChoice}`:`${c?.label} = ${p.cardVal}`;
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0 2px;"><span style="font-size:22px;">🂠</span><span style="font-size:13px;font-weight:600;color:#555;">${vl}</span></div>`;
+    } else {
+      const canChange=p.throws.length===0&&!p.done;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:4px 0 6px;"><span style="font-size:28px;line-height:1;">🂠</span><span style="font-size:13px;color:#888;">Karte liegt verdeckt</span>${canChange?`<button class="btn" style="font-size:11px;padding:4px 10px;margin-left:auto;" onclick="bjClearCard('${esc(s)}')">Ändern</button>`:''}</div>`;
+    }
+
+    if(isActive){
+      html+=`<div class="bj-numpad">${Array.from({length:10},(_,i)=>`<button class="bj-num-btn" onclick="bjThrow('${esc(s)}',${i+1})">${i+1}</button>`).join('')}</div>`;
+      html+=`<button class="btn" style="width:100%;margin-top:4px;height:42px;font-weight:600;" onclick="bjStehen('${esc(s)}')">Stehen (Würfe: ${p.throwsTotal})</button>`;
+    }
+
+    if((p.done||p.throws.length>0)&&cardSelected&&!p.revealed&&!p.busted&&!p.won){
+      if(p.cardId==='ass'&&p.assChoosing){
+        html+=`<div style="margin-top:8px;"><div style="font-size:12px;font-weight:600;color:#888;text-align:center;margin-bottom:6px;">Welchen Wert hat dein Ass?</div><div style="display:flex;gap:8px;"><button class="btn btn-primary" style="flex:1;height:48px;font-size:20px;font-weight:800;" onclick="bjChooseAss('${esc(s)}',1)">1</button><button class="btn btn-primary" style="flex:1;height:48px;font-size:20px;font-weight:800;" onclick="bjChooseAss('${esc(s)}',11)">11</button></div></div>`;
+      } else {
+        html+=`<button class="btn btn-primary" style="width:100%;margin-top:6px;height:46px;font-size:16px;font-weight:700;" onclick="bjAufdecken('${esc(s)}')">🂠 Aufdecken</button>`;
+      }
+    }
+    if(histStr) html+=`<div class="bj-throws-history">${histStr}</div>`;
+    html+=`</div>`;
+  });
+
+  if(bj.showResult) html+=renderBJResult(aktiv);
+  const allRevealed=aktiv.length>0&&aktiv.every(s=>{const p=bj.players[s];return p&&(p.revealed||p.busted||p.won);});
+  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-danger" onclick="bjReset()" style="flex:1;">Zurücksetzen</button>
+    ${allRevealed&&!bj.showResult?`<button class="btn btn-primary" onclick="bjAuswerten()" style="flex:1;">Auswerten</button>`:''}
+  </div></div></div>`;
+  return html;
+}
+
+function renderBJResult(spieler) {
+  const bj=state.blackjack;
+  const busted=spieler.filter(s=>bj.players[s]?.busted);
+  const won21=spieler.filter(s=>bj.players[s]?.won);
+  const others=spieler.filter(s=>!bj.players[s]?.busted&&!bj.players[s]?.won).sort((a,b)=>(bj.players[b]?.total||0)-(bj.players[a]?.total||0));
+  const loserStart=Math.max(0,others.length-bj.loserCount);
+  let html='<div class="result-list" style="margin-top:14px;">';
+  won21.forEach(s=>{ html+=`<div class="bj-result-row win-row"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span style="flex:1;font-size:14px;font-weight:600;">${s.trim()}</span><span class="bj-result-label" style="background:#e8fde8;color:#27ae60;">21 — Gewonnen!</span><span style="font-size:16px;font-weight:800;color:#27ae60;">21</span></div>`; });
+  others.forEach((s,i)=>{ const isLoser=i>=loserStart,score=bj.players[s]?.total||0; html+=`<div class="bj-result-row${isLoser?' extra-loser':''}"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span style="flex:1;font-size:14px;font-weight:600;">${s.trim()}</span>${isLoser?`<span class="bj-result-label" style="background:#fde8e8;color:#c0392b;">Verlierer</span>`:''}<span style="font-size:16px;font-weight:700;">${score}</span></div>`; });
+  busted.forEach(s=>{ const score=bj.players[s]?.total||0; html+=`<div class="bj-result-row bust-row"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span style="flex:1;font-size:14px;font-weight:600;">${s.trim()}</span><span class="bj-result-label" style="background:#fde8e8;color:#c0392b;">Überworfen!</span><span style="font-size:16px;font-weight:700;color:#c0392b;">${score}</span></div>`; });
+  return html+'</div>';
+}
+
+function toggleBlackjack() { state.blackjack.open=!state.blackjack.open; renderSpiele(); }
+function bjChangeLoser(d) { state.blackjack.loserCount=Math.max(0,state.blackjack.loserCount+d); renderSpiele(); }
+function bjPickCard(s,cardId) {
+  bjInitPlayer(s); const p=state.blackjack.players[s];
+  if(p.done||p.revealed||p.busted||p.won) return;
+  const card=BJ_CARDS.find(c=>c.id===cardId); if(!card) return;
+  p.cardId=cardId; p.cardVal=card.isAss?0:card.val;
+  p.throws=[]; p.throwsTotal=0; p.total=0; p.done=false; p.revealed=false; p.busted=false; p.won=false; p.assChoice=null; p.assChoosing=false;
+  state.blackjack.showResult=false;
+  if(navigator.vibrate) navigator.vibrate(15); renderSpiele();
+}
+function bjThrow(s,n) {
+  bjInitPlayer(s); const p=state.blackjack.players[s];
+  if(!p.cardId||p.done||p.revealed||p.busted||p.won) return;
+  p.throws.push(n); p.throwsTotal+=n;
+  if(navigator.vibrate) navigator.vibrate(15); renderSpiele();
+}
+function bjStehen(s) {
+  bjInitPlayer(s); const p=state.blackjack.players[s];
+  if(!p.cardId||p.done||p.revealed) return;
+  p.done=true; if(navigator.vibrate) navigator.vibrate(25); renderSpiele();
+}
+function bjClearCard(s) {
+  bjInitPlayer(s); const p=state.blackjack.players[s];
+  if(p.throws.length>0||p.done||p.revealed) return;
+  p.cardId=null; p.cardVal=0; p.assChoice=null; p.assChoosing=false; renderSpiele();
+}
+function bjChooseAss(s,val) {
+  bjInitPlayer(s); const p=state.blackjack.players[s];
+  if(p.cardId!=='ass'||p.revealed) return;
+  p.assChoice=val; p.cardVal=val; bjAufdecken(s);
+}
+function bjAufdecken(s) {
+  bjInitPlayer(s); const p=state.blackjack.players[s];
+  if(!p.cardId||p.revealed) return;
+  if(p.cardId==='ass'&&p.assChoice===null){p.assChoosing=true;renderSpiele();return;}
+  p.revealed=true; p.total=p.throwsTotal+p.cardVal;
+  if(p.total>21){p.busted=true;if(navigator.vibrate)navigator.vibrate([80,60,80]);}
+  else if(p.total===21){p.won=true;if(navigator.vibrate)navigator.vibrate([50,30,50,30,100]);}
+  else if(navigator.vibrate) navigator.vibrate(30);
+  renderSpiele();
+}
+function bjAuswerten() { state.blackjack.showResult=true; renderSpiele(); }
+function bjReset() { state.blackjack.players={}; state.blackjack.showResult=false; renderSpiele(); }
+
+// ── Tag-Nacht ─────────────────────────────────────────────────
+const TN_ROUNDS=[
+  {id:'tag1',label:'Tag 1',group:'day',mult:1},{id:'tag2',label:'Tag 2',group:'day',mult:1},{id:'tag3',label:'Tag 3',group:'day',mult:1},
+  {id:'nacht1',label:'Nacht 1',group:'night',mult:2},{id:'nacht2',label:'Nacht 2',group:'night',mult:2},{id:'nacht3',label:'N.d.N.',group:'night3',mult:3},
+];
+function tnTotal(s) { const sc=state.tagnacht.scores[s]||{}; return TN_ROUNDS.reduce((sum,r)=>sum+(parseFloat(sc[r.id])||0)*r.mult,0); }
+
+function renderTagNachtCard() {
+  const tn=state.tagnacht;
+  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
+  const startedCnt=aktiv.filter(s=>TN_ROUNDS.some(r=>(tn.scores[s]||{})[r.id]!==''&&(tn.scores[s]||{})[r.id]!==undefined)).length;
+  const metaLabel=startedCnt>0?`${startedCnt}/${aktiv.length} Spieler eingetragen`:`${aktiv.length} Spieler · 3 Tage × 3 Nächte`;
+
+  let html=`<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleTagNacht()">
+      <div><div class="spiel-title">Tag-Nacht</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${tn.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${tn.open?' open':''}">
+    <div class="spiel-desc">Ein Einzelspiel. Man spielt <strong>3 Tage</strong> und <strong>3 Nächte</strong>.<br><br>Jeder Spieler macht einen Wurf pro Runde. <strong>Tage</strong> zählen einfach, <strong>Nächte</strong> zählen doppelt. Die dritte Nacht ist die <strong>„Nacht der Nächte"</strong> — sie zählt dreifach.<br><br>Die Spieler mit der <strong>geringsten Punktzahl</strong> verlieren. Legt vorher fest, wie viele Spieler verlieren.</div>
+    <div class="loser-count-row">
+      <span class="loser-count-label">Anzahl Verlierer</span>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="tnChangeLoser(-1)">−</button>
+        <span class="stepper-val">${tn.loserCount}</span>
+        <button class="stepper-btn" onclick="tnChangeLoser(1)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;font-size:11px;color:#888;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0ede8;">
+      <span>☀️ Tag = ×1</span><span>🌙 Nacht = ×2</span><span>🌑 Nacht der Nächte = ×3</span>
+    </div>`;
+
+  aktiv.forEach(s=>{
+    if(!tn.scores[s]) tn.scores[s]={};
+    const sc=tn.scores[s], total=tnTotal(s), anyFilled=TN_ROUNDS.some(r=>sc[r.id]!==''&&sc[r.id]!==undefined);
+    html+=`<div class="tn-player-row">
+      <div class="tn-player-info"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span class="tn-player-name">${s.trim()}</span></div>
+      <div class="tn-inputs">
+        <div class="tn-group"><span class="tn-group-label day">☀️</span>
+          ${['tag1','tag2','tag3'].map((id,i)=>`<input class="tn-inp" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[id]??''}" oninput="tnSet('${esc(s)}','${id}',this.value)">`).join('')}
+          <span class="tn-mult">×1</span></div>
+        <div class="tn-group"><span class="tn-group-label night">🌙</span>
+          ${['nacht1','nacht2'].map((id,i)=>`<input class="tn-inp night" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[id]??''}" oninput="tnSet('${esc(s)}','${id}',this.value)">`).join('')}
+          <span class="tn-mult" style="color:#666;">×2</span>
+          <span class="tn-group-label night" style="margin-left:6px;">🌑</span>
+          <input class="tn-inp night3" type="number" inputmode="numeric" min="0" max="9" placeholder="N" value="${sc['nacht3']??''}" oninput="tnSet('${esc(s)}','nacht3',this.value)">
+          <span class="tn-mult" style="color:#666;">×3</span></div>
+      </div>
+      <div class="tn-total-col"><div class="tn-total-val">${anyFilled?total:'–'}</div><div class="tn-total-label">Punkte</div></div>
+    </div>`;
+  });
+
+  if(tn.showResult) html+=renderTNResult(aktiv);
+  const anyData=aktiv.some(s=>TN_ROUNDS.some(r=>(tn.scores[s]||{})[r.id]!==''&&(tn.scores[s]||{})[r.id]!==undefined));
+  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-danger" onclick="tnReset()" style="flex:1;">Zurücksetzen</button>
+    ${anyData?`<button class="btn btn-primary" onclick="tnAuswerten()" style="flex:1;">Auswerten</button>`:''}
+  </div></div></div>`;
+  return html;
+}
+
+function renderTNResult(spieler) {
+  const tn=state.tagnacht;
+  const ranked=spieler.map(s=>({name:s,total:tnTotal(s)})).sort((a,b)=>b.total-a.total);
+  const loserStart=Math.max(0,ranked.length-tn.loserCount);
+  let html='<div class="result-list" style="margin-top:14px;">';
+  ranked.forEach((p,i)=>{ const isLoser=i>=loserStart,isTop=i===0; html+=`<div class="result-row${isLoser?' loser':isTop?' top':''}"><span class="result-rank">${i+1}.</span><div class="avatar" style="background:${avatarColor(p.name)};width:24px;height:24px;font-size:9px;flex-shrink:0;">${initials(p.name)}</div><span class="result-name">${p.name.trim()}</span>${isLoser?'<span class="loser-badge">Verlierer</span>':isTop?'<span class="winner-tag">1. Platz</span>':''}<span class="result-score">${p.total}</span></div>`; });
+  return html+'</div>';
+}
+function toggleTagNacht() { state.tagnacht.open=!state.tagnacht.open; renderSpiele(); }
+function tnChangeLoser(d) { state.tagnacht.loserCount=Math.max(1,state.tagnacht.loserCount+d); renderSpiele(); }
+function tnSet(s,roundId,val) { if(!state.tagnacht.scores[s]) state.tagnacht.scores[s]={}; state.tagnacht.scores[s][roundId]=val; state.tagnacht.showResult=false; renderSpiele(); }
+function tnAuswerten() { state.tagnacht.showResult=true; renderSpiele(); }
+function tnReset() { state.tagnacht.scores={}; state.tagnacht.showResult=false; renderSpiele(); }
+
+// ── Berg und Talfahrt ─────────────────────────────────────────
+function btTotal(s) {
+  const sc=state.bergtal.scores[s]||{};
+  let total=0;
+  for(let i=1;i<=5;i++){const v=sc[`t${i}`];if(v===''||v===undefined||v===null)continue;total+=parseFloat(v)||0;}
+  for(let i=6;i<=10;i++){const v=sc[`t${i}`];if(v===''||v===undefined||v===null)continue;const n=parseFloat(v);total-=isNaN(n)?0:(n===0?10:n);}
+  return total;
+}
+function btBergSum(s){const sc=state.bergtal.scores[s]||{};let sum=0;for(let i=1;i<=5;i++){const v=sc[`t${i}`];if(v!==''&&v!==undefined&&v!==null)sum+=parseFloat(v)||0;}return sum;}
+function btTalSum(s){const sc=state.bergtal.scores[s]||{};let sum=0;for(let i=6;i<=10;i++){const v=sc[`t${i}`];if(v===''||v===undefined||v===null)continue;const n=parseFloat(v);sum+=isNaN(n)?0:(n===0?10:n);}return sum;}
+
+function renderBergTalCard() {
+  const bt=state.bergtal;
+  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
+  const startedCnt=aktiv.filter(s=>Object.values(bt.scores[s]||{}).some(v=>v!==''&&v!==undefined&&v!==null)).length;
+  const metaLabel=startedCnt>0?`${startedCnt}/${aktiv.length} Spieler eingetragen`:`${aktiv.length} Spieler · 5 Berg + 5 Tal`;
+
+  let html=`<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleBergTal()">
+      <div><div class="spiel-title">Berg und Talfahrt</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${bt.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${bt.open?' open':''}">
+    <div class="spiel-desc">Ein Einzelspiel mit <strong>10 Würfen</strong> pro Spieler.<br><br>⛰️ <strong>Würfe 1–5 (Berg):</strong> Punkte werden <strong>addiert</strong> — so hoch wie möglich werfen! Pumpe zählt 0.<br><br>🏔️ <strong>Würfe 6–10 (Tal):</strong> Punkte werden <strong>abgezogen</strong> — so niedrig wie möglich werfen! Pumpe zählt −10.<br><br>Ziel: am Ende möglichst viele Punkte auf dem Konto. Die Spieler mit der <strong>geringsten Punktzahl</strong> verlieren.</div>
+    <div class="loser-count-row">
+      <span class="loser-count-label">Anzahl Verlierer</span>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="btChangeLoser(-1)">−</button>
+        <span class="stepper-val">${bt.loserCount}</span>
+        <button class="stepper-btn" onclick="btChangeLoser(1)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;font-size:11px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0ede8;">
+      <span style="color:#1a5c2a;font-weight:700;">⛰️ Berg (1–5) = addieren</span>
+      <span style="color:#b52222;font-weight:700;">🏔️ Tal (6–10) = abziehen</span>
+    </div>`;
+
+  aktiv.forEach(s=>{
+    if(!bt.scores[s]) bt.scores[s]={};
+    const sc=bt.scores[s], bergSum=btBergSum(s), talSum=btTalSum(s), total=btTotal(s);
+    const anyFilled=Object.values(sc).some(v=>v!==''&&v!==undefined&&v!==null);
+    const bergFilled=[1,2,3,4,5].some(i=>sc[`t${i}`]!==''&&sc[`t${i}`]!==undefined);
+    const talFilled=[6,7,8,9,10].some(i=>sc[`t${i}`]!==''&&sc[`t${i}`]!==undefined);
+    html+=`<div class="bt-player-row">
+      <div class="bt-player-info"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span class="bt-player-name">${s.trim()}</span></div>
+      <div class="bt-inputs">
+        <div class="bt-group"><span class="bt-group-label berg">⛰️</span>
+          ${Array.from({length:5},(_,i)=>`<input class="bt-inp berg" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[`t${i+1}`]??''}" oninput="btSet('${esc(s)}','t${i+1}',this.value)">`).join('')}
+          <span class="bt-sub" style="color:#1a5c2a;">${bergFilled?'+'+bergSum:''}</span></div>
+        <div class="bt-group"><span class="bt-group-label tal">🏔️</span>
+          ${Array.from({length:5},(_,i)=>`<input class="bt-inp tal" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[`t${i+6}`]??''}" oninput="btSet('${esc(s)}','t${i+6}',this.value)">`).join('')}
+          <span class="bt-sub" style="color:#b52222;">${talFilled?'−'+talSum:''}</span></div>
+      </div>
+      <div class="bt-total-col"><div class="bt-total-val${anyFilled&&total<0?' negative':''}">${anyFilled?total:'–'}</div><div class="bt-total-label">Punkte</div></div>
+    </div>`;
+  });
+
+  if(bt.showResult) html+=renderBTResult(aktiv);
+  const anyData=aktiv.some(s=>Object.values(bt.scores[s]||{}).some(v=>v!==''&&v!==undefined&&v!==null));
+  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-danger" onclick="btReset()" style="flex:1;">Zurücksetzen</button>
+    ${anyData?`<button class="btn btn-primary" onclick="btAuswerten()" style="flex:1;">Auswerten</button>`:''}
+  </div></div></div>`;
+  return html;
+}
+
+function renderBTResult(spieler) {
+  const bt=state.bergtal;
+  const ranked=spieler.map(s=>({name:s,total:btTotal(s)})).sort((a,b)=>b.total-a.total);
+  const loserStart=Math.max(0,ranked.length-bt.loserCount);
+  let html='<div class="result-list" style="margin-top:14px;">';
+  ranked.forEach((p,i)=>{ const isLoser=i>=loserStart,isTop=i===0; html+=`<div class="result-row${isLoser?' loser':isTop?' top':''}"><span class="result-rank">${i+1}.</span><div class="avatar" style="background:${avatarColor(p.name)};width:24px;height:24px;font-size:9px;flex-shrink:0;">${initials(p.name)}</div><span class="result-name">${p.name.trim()}</span>${isLoser?'<span class="loser-badge">Verlierer</span>':isTop?'<span class="winner-tag">1. Platz</span>':''}<span class="result-score">${p.total}</span></div>`; });
+  return html+'</div>';
+}
+function toggleBergTal() { state.bergtal.open=!state.bergtal.open; renderSpiele(); }
+function btChangeLoser(d) { state.bergtal.loserCount=Math.max(1,state.bergtal.loserCount+d); renderSpiele(); }
+function btSet(s,k,val) { if(!state.bergtal.scores[s]) state.bergtal.scores[s]={}; state.bergtal.scores[s][k]=val; state.bergtal.showResult=false; renderSpiele(); }
+function btAuswerten() { state.bergtal.showResult=true; renderSpiele(); }
+function btReset() { state.bergtal.scores={}; state.bergtal.showResult=false; renderSpiele(); }
+
+// ── Mensch ärgere dich nicht ──────────────────────────────────
+function renderMadnCard() {
+  const g=state.madn;
+  const hasOrder=g.order.length>0;
+  let metaLabel='Einzelspiel · Exakt 50 Punkte';
+  if(hasOrder&&g.winner) metaLabel=`🏆 ${g.winner.trim()} hat gewonnen!`;
+  else if(hasOrder) metaLabel=`Dran: ${g.order[g.currentTurn].trim()} · ${g.order.length} Spieler`;
+
+  let html=`<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleMadn()">
+      <div><div class="spiel-title">Mensch ärgere dich nicht</div><div class="spiel-meta">${metaLabel}</div></div>
+      <span class="spiel-chevron${g.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${g.open?' open':''}">
+    <div class="spiel-desc">Reihum wirft jeder <strong>die Vollen</strong>, bis er <strong>exakt 50 Punkte</strong> erreicht.<br><br>⚠️ Erreicht ein Spieler dieselbe Punktzahl wie ein anderer, wird der andere auf <strong>0 zurückgesetzt</strong>. Wer <strong>über 50</strong> kommt, fängt ebenfalls wieder bei 0 an.<br><br>Nur wer <strong>exakt 50</strong> trifft, gewinnt. Mensch ärgere dich nicht!</div>`;
+
+  if(!hasOrder){
+    html+=`<button class="btn btn-primary" onclick="madnAuslosen()" style="width:100%;margin-top:4px;padding:12px;">🎲 Reihenfolge auslosen</button>`;
+  } else {
+    html+=`<div style="margin-bottom:10px;">`;
+    g.order.forEach((s,idx)=>{
+      const score=g.scores[s]||0, isActive=idx===g.currentTurn&&!g.winner, isWinner=g.winner===s;
+      const wasReset=g.lastReset.some(r=>r.name===s);
+      const pct=Math.min(100,(score/50)*100);
+      let fillColor='#1a5c2a';
+      if(score>=45) fillColor='#b52222'; else if(score>=30) fillColor='#c8860a';
+      html+=`<div class="madn-player-row${isActive?' madn-active-row':''}">
+        <div class="madn-order-badge${isActive?' active':isWinner?' won':''}">${idx+1}</div>
+        <div class="avatar" style="background:${avatarColor(s)};width:24px;height:24px;font-size:9px;flex-shrink:0;">${initials(s)}</div>
+        <div class="madn-name-col">${s.trim()}</div>
+        <div class="madn-progress-col"><div class="madn-progress-bar-bg"><div class="madn-progress-fill" style="width:${pct}%;background:${fillColor};"></div></div></div>
+        <div class="madn-score-num${isWinner?' won':''}">${score}</div>
+        ${wasReset?`<span class="madn-reset-tag">↩ 0</span>`:`<span class="madn-reset-tag-spacer"></span>`}
+      </div>`;
+    });
+    html+=`</div>`;
+
+    if(!g.winner){
+      const current=g.order[g.currentTurn], currentScore=g.scores[current]||0;
+      html+=`<div class="madn-active-section">
+        <div class="madn-active-label">🎳 Dran: ${current.trim()} — aktuell ${currentScore} Punkte</div>
+        <div class="madn-numpad">${[0,1,2,3,4,5,6,7,8,9].map(n=>`<button class="madn-num-btn" onclick="madnThrow(${n})">${n}</button>`).join('')}</div>
+      </div>`;
+    }
+    if(g.winner) html+=`<div class="madn-winner-banner">🏆 ${g.winner.trim()} hat exakt 50 erreicht und gewonnen!</div>`;
+
+    html+=`<div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn btn-danger" onclick="madnReset()" style="flex:1;">Neues Spiel</button>
+      <button class="btn" onclick="madnAuslosen()" style="flex:1;">Neu auslosen</button>
+    </div>`;
+  }
+  html+=`</div></div>`;
+  return html;
+}
+
+function madnThrow(value) {
+  const g=state.madn;
+  if(g.winner) return;
+  const s=g.order[g.currentTurn], oldScore=g.scores[s]||0, newScore=oldScore+value;
+  g.lastReset=[];
+  if(newScore>50){g.scores[s]=0;g.lastReset.push({name:s,reason:'over'});}
+  else if(newScore===50){
+    g.scores[s]=50; g.winner=s;
+  } else {
+    g.scores[s]=newScore;
+    if(newScore>0){
+      g.order.forEach(other=>{
+        if(other!==s&&(g.scores[other]||0)===newScore){g.scores[other]=0;g.lastReset.push({name:other,reason:'collision'});}
+      });
+    }
+  }
+  if(!g.winner) g.currentTurn=(g.currentTurn+1)%g.order.length;
+  if(navigator.vibrate) navigator.vibrate(15);
+  renderSpiele();
+}
+function toggleMadn() { state.madn.open=!state.madn.open; renderSpiele(); }
+function madnAuslosen() {
+  const spieler=state.spieler.filter(s=>state.anwesend.includes(s));
+  const shuffled=[...spieler].sort(()=>Math.random()-0.5);
+  state.madn.order=shuffled; state.madn.scores={}; shuffled.forEach(s=>{state.madn.scores[s]=0;});
+  state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[]; state.madn.open=true;
+  renderSpiele();
+}
+function madnReset() {
+  state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0;
+  state.madn.winner=null; state.madn.lastReset=[]; renderSpiele();
+}
+
+// ── 4 Gewinnt ─────────────────────────────────────────────────
+function renderVierGewinntCard() {
+  const vg = state.vierGewinnt;
+  const n1 = vg.teamName1||'Team 1', n2 = vg.teamName2||'Team 2';
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+
+  let boardCells = '';
+  for (let row=8; row>=0; row--) {
+    for (let col=0; col<9; col++) {
+      const val = vg.board[col][row];
+      const isWin = vg.winCells.some(wc => wc.col===col && wc.row===row);
+      const cls = isWin ? 'win-cell' : val===0 ? 't1' : val===1 ? 't2' : '';
+      boardCells += '<div class="vg-cell '+cls+'"></div>';
+    }
+  }
+
+  let colBtns = '';
+  for (let col=0; col<9; col++) {
+    const full = vg.board[col].every(c => c!==null);
+    const dis = full || vg.winner!==null;
+    colBtns += '<button class="vg-col-btn"'+(dis?' disabled':'')+' onclick="vgDrop('+col+')">'+(col+1)+'</button>';
+  }
+
+  const playerChips = aktiv.map(s => {
+    const cls = vg.team1.includes(s)?'chip-team1':vg.team2.includes(s)?'chip-team2':'chip-unassigned';
+    return '<span class="tanne-player-chip '+cls+'" onclick="vgTogglePlayer(\''+esc(s)+'\')" style="cursor:pointer;"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>';
+  }).join('');
+
+  const t1Chips = vg.team1.map(s => '<span class="tanne-player-chip chip-team1" onclick="vgTogglePlayer(\''+esc(s)+'\')"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>').join('') || '<div style="font-size:12px;color:#bbb;padding:4px 0;">–</div>';
+  const t2Chips = vg.team2.map(s => '<span class="tanne-player-chip chip-team2" onclick="vgTogglePlayer(\''+esc(s)+'\')"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>').join('') || '<div style="font-size:12px;color:#bbb;padding:4px 0;">–</div>';
+
+  const ctName = vg.currentTeam===0 ? n1 : n2;
+  const ctCls  = vg.currentTeam===0 ? 't1' : 't2';
+
+  let statusHtml = '';
+  if (vg.winner===null && aktiv.length>=2) {
+    statusHtml = '<div class="vg-turn-badge '+ctCls+'">🎳 '+esc(ctName)+' ist dran</div>';
+  } else if (vg.winner===-1) {
+    statusHtml = '<div class="vg-winner-banner">🤝 Unentschieden!</div>';
+  } else if (vg.winner!==null) {
+    const wn = vg.winner===0 ? n1 : n2;
+    statusHtml = '<div class="vg-winner-banner">🏆 '+esc(wn)+' gewinnt!</div>';
+  }
+
+  const pumpeBtn = vg.winner===null ? '<div class="vg-pumpe-row"><button class="vg-pumpe-btn" onclick="vgPumpe()">💨 Pumpe — keine Münze, nächstes Team</button></div>' : '';
+
+  return `<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleVierGewinnt()">
+      <div><div class="spiel-title">🔵 4 Gewinnt</div><div class="spiel-meta">2 Teams · 4 in einer Reihe gewinnt</div></div>
+      <span class="spiel-chevron${vg.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${vg.open?' open':''}">
+      <div class="spiel-desc">Teilt die Spieler auf 2 Teams auf. Nach jedem Wurf tippt ihr die geworfene Zahl (1–9) — die Münze eures Teams fällt in die entsprechende Spalte. Wer zuerst <strong>4 Münzen in einer Reihe</strong> verbindet (horizontal, vertikal oder diagonal), gewinnt! Bei einer <strong>Pumpe</strong> fällt keine Münze und das andere Team ist dran.</div>
+      <div class="team-names-row">
+        <div class="team-name-field">
+          <span class="team-name-label t1">Team 1</span>
+          <input class="team-name-input t1" type="text" maxlength="20" value="${esc(n1)}" oninput="state.vierGewinnt.teamName1=this.value;renderSpiele()" placeholder="Team 1">
+        </div>
+        <div class="team-name-field">
+          <span class="team-name-label t2">Team 2</span>
+          <input class="team-name-input t2" type="text" maxlength="20" value="${esc(n2)}" oninput="state.vierGewinnt.teamName2=this.value;renderSpiele()" placeholder="Team 2">
+        </div>
+      </div>
+      <div class="tanne-players-row">${playerChips}</div>
+      <div class="tanne-teams" style="margin-bottom:10px;">
+        <div class="tanne-team-col"><div class="tanne-team-label tanne-team1-label">${esc(n1)} (${vg.team1.length})</div>${t1Chips}</div>
+        <div class="tanne-team-col"><div class="tanne-team-label tanne-team2-label">${esc(n2)} (${vg.team2.length})</div>${t2Chips}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="btn" style="flex:1;" onclick="vgRandomTeams()">🎲 Zufällig aufteilen</button>
+      </div>
+      ${statusHtml}
+      <div class="vg-wrap">
+        <div class="vg-board">${boardCells}</div>
+        <div class="vg-col-btns">${colBtns}</div>
+      </div>
+      ${pumpeBtn}
+      <div class="spiel-actions" style="margin-top:12px;">
+        <button class="btn btn-danger" onclick="vgReset()">Zurücksetzen</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleVierGewinnt() {
+  state.vierGewinnt.open = !state.vierGewinnt.open;
+  renderSpiele();
+}
+
+function vgTogglePlayer(name) {
+  const vg = state.vierGewinnt;
+  if (vg.team1.includes(name)) { vg.team1 = vg.team1.filter(p=>p!==name); vg.team2.push(name); }
+  else if (vg.team2.includes(name)) { vg.team2 = vg.team2.filter(p=>p!==name); }
+  else { vg.team1.push(name); }
+  renderSpiele();
+}
+
+function vgRandomTeams() {
+  const vg = state.vierGewinnt;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  const sh = [...aktiv].sort(()=>Math.random()-0.5);
+  vg.team1 = sh.filter((_,i)=>i%2===0);
+  vg.team2 = sh.filter((_,i)=>i%2===1);
+  renderSpiele();
+}
+
+function vgCheckWin(board, lc, lr, team) {
+  const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+  for (const [dc,dr] of dirs) {
+    const cells = [{col:lc,row:lr}];
+    for (let i=1;i<4;i++){const c=lc+dc*i,r=lr+dr*i;if(c<0||c>8||r<0||r>8||board[c][r]!==team)break;cells.push({col:c,row:r});}
+    for (let i=1;i<4;i++){const c=lc-dc*i,r=lr-dr*i;if(c<0||c>8||r<0||r>8||board[c][r]!==team)break;cells.push({col:c,row:r});}
+    if (cells.length>=4) return cells;
+  }
+  return null;
+}
+
+function vgDrop(col) {
+  const vg = state.vierGewinnt;
+  if (vg.winner!==null) return;
+  let dropRow = -1;
+  for (let r=0;r<9;r++) { if(vg.board[col][r]===null){dropRow=r;break;} }
+  if (dropRow===-1) return;
+  vg.board[col][dropRow] = vg.currentTeam;
+  vg.lastDrop = {col, row:dropRow};
+  const wc = vgCheckWin(vg.board, col, dropRow, vg.currentTeam);
+  if (wc) {
+    vg.winner = vg.currentTeam; vg.winCells = wc;
+    applyGamePenalty();
+  } else {
+    const draw = vg.board.every(c=>c.every(cell=>cell!==null));
+    if (draw) { vg.winner=-1; vg.winCells=[]; }
+    else vg.currentTeam = vg.currentTeam===0?1:0;
+  }
+  renderSpiele();
+}
+
+function vgPumpe() {
+  const vg = state.vierGewinnt;
+  if (vg.winner!==null) return;
+  vg.lastDrop = null;
+  vg.currentTeam = vg.currentTeam===0?1:0;
+  renderSpiele();
+}
+
+function vgReset() {
+  const vg = state.vierGewinnt;
+  vg.board = Array.from({length:9},()=>new Array(9).fill(null));
+  vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null;
+  renderSpiele();
+}
+
+// ── Busfahren ─────────────────────────────────────────────────
+const BF_COLORS = ['#888','#e74c3c','#e67e22','#c9a227','#27ae60','#16a085','#2980b9','#8e44ad','#e91e8c','#2c3e50'];
+
+function renderBusfahrenCard() {
+  const bf = state.busfahren;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  const bfc = n => BF_COLORS[n] || '#888';
+  const order = bf.playerOrder.length > 0 ? bf.playerOrder : aktiv;
+
+  let bodyHtml = '';
+
+  // ── Phase 0: Reihenfolge festlegen ──────────────────────────
+  if (bf.phase === 'order') {
+    const chips = aktiv.map(p => {
+      const pos = bf.playerOrder.indexOf(p);
+      const sel = pos !== -1;
+      return '<div onclick="bfSetOrder(\''+esc(p)+'\')" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px 9px 9px;border-radius:24px;cursor:pointer;border:2px solid '+(sel?'#1a1a1a':'#d0cdc5')+';background:'+(sel?'#1a1a1a':'#fff')+';color:'+(sel?'#fff':'#1a1a1a')+';font-size:14px;font-weight:600;user-select:none;transition:all 0.1s;">'
+        +(sel
+          ? '<span style="width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">'+(pos+1)+'</span>'
+          : '<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>')
+        +p.trim()+'</div>';
+    }).join('');
+
+    const allOrdered = bf.playerOrder.length === aktiv.length;
+    const resetLink = bf.playerOrder.length > 0
+      ? '<button style="background:none;border:none;color:#c0392b;font-size:13px;cursor:pointer;padding:2px 0 14px;" onclick="bfResetOrder()">✕ Reihenfolge zurücksetzen</button>'
+      : '';
+
+    bodyHtml = '<button class="btn btn-primary" style="width:100%;height:48px;font-size:15px;margin-bottom:10px;" onclick="bfRandomOrder()">🎲 Zufällige Reihenfolge</button>'
+      +'<div style="text-align:center;font-size:12px;color:#aaa;margin-bottom:12px;">— oder manuell antippen —</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;">'+chips+'</div>'
+      +resetLink
+      +'<button class="btn btn-primary" style="width:100%;height:48px;font-size:15px;" onclick="bfConfirmOrder()" '+(allOrdered?'':'disabled')+'>Los geht\'s →</button>'
+      +(bf.playerOrder.length > 0 && !allOrdered ? '<div style="font-size:12px;color:#bbb;text-align:center;margin-top:8px;">'+bf.playerOrder.length+' von '+aktiv.length+' ausgewählt</div>' : '');
+
+  // ── Phase 1: Busbesetzung ────────────────────────────────────
+  } else if (bf.phase === 'assignment') {
+    const currentPlayer = order[bf.currentAssignIdx];
+
+    let assignedHtml = '';
+    for (let i=0; i<bf.currentAssignIdx && i<order.length; i++) {
+      const p = order[i], bn = bf.assignments[p], c = bfc(bn);
+      assignedHtml += '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8;">'
+        +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'
+        +'<span style="flex:1;font-size:13px;font-weight:600;">'+p.trim()+'</span>'
+        +'<span style="font-size:12px;font-weight:700;background:'+c+';color:#fff;padding:3px 10px;border-radius:8px;">🚌 Bus '+bn+'</span>'
+        +'</div>';
+    }
+
+    let numBtns = '';
+    for (let i=1; i<=9; i++) numBtns += '<button class="bf-num-btn" onclick="bfAssign('+i+')" '+(!currentPlayer?'disabled':'')+'>'+i+'</button>';
+
+    bodyHtml = '<div style="background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:center;">'
+      +'<div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">'+(currentPlayer?currentPlayer.trim():'Alle zugewiesen')+'</div>'
+      +'<div style="font-size:13px;color:#888;">'+(currentPlayer?'würfelt jetzt — Zahl = Busnummer':'Zuweisung abgeschlossen')+'</div>'
+      +'</div>'
+      +(assignedHtml?'<div style="margin-bottom:12px;">'+assignedHtml+'</div>':'')
+      +'<div class="bf-numpad">'+numBtns+'</div>'
+      +'<div style="font-size:12px;color:#bbb;text-align:center;">'+bf.currentAssignIdx+' von '+order.length+' zugewiesen</div>';
+
+  // ── Phase 2+3: Spiel / Fertig ────────────────────────────────
+  } else {
+    const busNums = Object.keys(bf.buses).map(Number).sort((a,b)=>a-b);
+
+    let busCards = '';
+    for (const bn of busNums) {
+      const bus = bf.buses[bn], c = bfc(bn), isWin = bf.winner===bn;
+      let tires = '';
+      for (let i=0; i<6; i++) tires += '<div style="width:28px;height:28px;border-radius:50%;border:2.5px solid '+c+';background:'+(i<bus.tires?c:'transparent')+';opacity:'+(i<bus.tires?'1':'0.25')+';flex-shrink:0;"></div>';
+      const chips = bus.players.map(p=>
+        '<span class="tanne-player-chip" style="background:'+c+'20;border-color:'+c+'55;color:#222;">'
+        +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'+p.trim()+'</span>'
+      ).join('');
+      busCards += '<div style="border-radius:12px;border:2px solid '+c+';background:'+(isWin?c+'18':'#fff')+';padding:12px 14px;margin-bottom:8px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +'<div style="width:44px;height:44px;border-radius:10px;background:'+c+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0;">'+bn+'</div>'
+        +'<div style="flex:1;"><div style="font-size:15px;font-weight:700;color:'+c+';">Bus '+bn+(isWin?' 🏆':'')+'</div>'
+        +'<div style="font-size:12px;color:#888;">'+bus.tires+' / 6 Reifen</div></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:5px;margin-bottom:8px;">'+tires+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+chips+'</div>'
+        +'</div>';
+    }
+
+    let statusHtml = '';
+    if (bf.phase==='done') {
+      const wn=bf.winner, wp=(bf.buses[wn]?.players||[]).join(', ');
+      statusHtml = '<div class="bf-winner-banner">🏆 Bus '+wn+' gewinnt!'+(wp?' · '+wp:'')+'</div>';
+    } else {
+      const cp = order.length>0 ? order[bf.currentThrowIdx%order.length] : null;
+      statusHtml = '<div class="bf-turn-badge">🎳 '+(cp?cp.trim():'–')+' ist dran</div>';
+    }
+
+    let numBtns = '';
+    for (let i=1; i<=9; i++) numBtns += '<button class="bf-num-btn" '+(bf.phase==='done'?'disabled':'')+' onclick="bfThrow('+i+')">'+i+'</button>';
+
+    const lastLog = bf.log.length>0 ? '<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 2px;">'+bf.log[bf.log.length-1]+'</div>' : '';
+
+    bodyHtml = statusHtml+busCards+'<div class="bf-numpad">'+numBtns+'</div>'+lastLog;
+  }
+
+  return `<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleBusfahren()">
+      <div><div class="spiel-title">🚌 Busfahren</div><div class="spiel-meta">Alle Spieler · Reihum · Erster Bus mit 6 Reifen gewinnt</div></div>
+      <span class="spiel-chevron${bf.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${bf.open?' open':''}">
+      <div class="spiel-desc">Runde 1 — Busbesetzung: Jeder wirft einmal, die Zahl bestimmt seine Busnummer (mehrere können im selben Bus sein). Danach: egal wer die Zahl wirft — der dazugehörige Bus bekommt einen <strong>Reifen</strong>. Wer zuerst <strong>6 Reifen</strong> hat, gewinnt!</div>
+      ${bodyHtml}
+      <div class="spiel-actions">
+        <button class="btn btn-danger" onclick="bfReset()">Zurücksetzen</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleBusfahren() { state.busfahren.open=!state.busfahren.open; renderSpiele(); }
+
+function bfSetOrder(name) {
+  const bf = state.busfahren;
+  const idx = bf.playerOrder.indexOf(name);
+  if (idx !== -1) bf.playerOrder.splice(idx, 1);
+  else bf.playerOrder.push(name);
+  renderSpiele();
+}
+
+function bfRandomOrder() {
+  const bf = state.busfahren;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  bf.playerOrder = [...aktiv].sort(() => Math.random() - 0.5);
+  bf.phase = 'assignment'; bf.currentAssignIdx = 0;
+  renderSpiele();
+}
+
+function bfConfirmOrder() {
+  const bf = state.busfahren;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  if (bf.playerOrder.length < aktiv.length) return;
+  bf.phase = 'assignment'; bf.currentAssignIdx = 0;
+  renderSpiele();
+}
+
+function bfResetOrder() { state.busfahren.playerOrder = []; renderSpiele(); }
+
+function bfAssign(num) {
+  const bf = state.busfahren;
+  const order = bf.playerOrder;
+  const player = order[bf.currentAssignIdx];
+  if (!player) return;
+  bf.assignments[player] = num;
+  if (!bf.buses[num]) bf.buses[num] = {tires:0, players:[]};
+  bf.buses[num].players.push(player);
+  bf.currentAssignIdx++;
+  if (bf.currentAssignIdx >= order.length) { bf.phase='game'; bf.currentThrowIdx=0; }
+  renderSpiele();
+}
+
+function bfThrow(num) {
+  const bf = state.busfahren;
+  if (bf.phase !== 'game') return;
+  const order = bf.playerOrder;
+  if (!order.length) return;
+  const player = order[bf.currentThrowIdx % order.length];
+  let msg = '';
+  if (bf.buses[num] !== undefined) {
+    bf.buses[num].tires++;
+    msg = player.trim()+' wirft '+num+' → Bus '+num+': '+bf.buses[num].tires+'/6 Reifen';
+    if (bf.buses[num].tires >= 6) { bf.winner=num; bf.phase='done'; applyGamePenalty(); }
+  } else {
+    msg = player.trim()+' wirft '+num+' — kein Bus '+num;
+  }
+  bf.log.push(msg); if (bf.log.length>5) bf.log.shift();
+  if (bf.phase==='game') bf.currentThrowIdx++;
+  renderSpiele();
+}
+
+function bfReset() {
+  const bf = state.busfahren;
+  bf.phase='order'; bf.playerOrder=[]; bf.assignments={}; bf.currentAssignIdx=0;
+  bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
+  renderSpiele();
+}
+
+// ── Club selection ────────────────────────────────────────────
+function resetAllGames() {
+  state.spiele.forEach(g=>{g.scores={};g.showResult=false;});
+  const tb=state.tannenbaum; tb.tree1=new Array(25).fill(false); tb.tree2=new Array(25).fill(false); tb.team1=[]; tb.team2=[];
+  const ab=state.abräumen; ab.teams=[{throws:0,first:false,done:false},{throws:0,first:false,done:false}]; ab.team1=[]; ab.team2=[];
+  const b=state.bis100; b.teams=[{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''},{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''}]; b.team1=[]; b.team2=[];
+  state.blackjack.players={}; state.blackjack.showResult=false;
+  state.tagnacht.scores={}; state.tagnacht.showResult=false;
+  state.bergtal.scores={}; state.bergtal.showResult=false;
+  state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[];
+  const vg=state.vierGewinnt; vg.board=Array.from({length:9},()=>new Array(9).fill(null)); vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null; vg.team1=[]; vg.team2=[];
+  const bf=state.busfahren; bf.phase='order'; bf.playerOrder=[]; bf.assignments={}; bf.currentAssignIdx=0; bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
+}
+
+function selectClub(id) {
+  const club=CLUBS[id];
+  state.selectedClub=id; state.spieler=[...club.members]; state.anwesend=[...club.members];
+  resetAllGames();
+  const nameEl=document.getElementById('topbar-club-name');
+  if(nameEl) nameEl.textContent=club.name;
+  document.getElementById('topbar-logo-bb').style.display=id==='bb'?'flex':'none';
+  document.getElementById('topbar-logo-hb').style.display=id==='hb'?'flex':'none';
+  document.getElementById('topbar-logo-custom').style.display=id==='custom'?'flex':'none';
+  document.getElementById('club-selector').style.display='none';
+  document.getElementById('presence-panel').style.display='';
+  renderAll();
+}
+function switchClub() {
+  backToClubs();
+  document.getElementById('club-selector').style.display='flex';
+}
+
+// ── Custom team ───────────────────────────────────────────────
+let customMembers = [];
+
+function showCustomTeamForm() {
+  document.getElementById('club-cards-view').style.display='none';
+  document.getElementById('custom-team-view').style.display='flex';
+  customMembers=[];
+  document.getElementById('ct-name-inp').value='';
+  document.getElementById('ct-member-inp').value='';
+  renderCustomMembers();
+  setTimeout(()=>document.getElementById('ct-name-inp').focus(),100);
+}
+
+function backToClubs() {
+  document.getElementById('custom-team-view').style.display='none';
+  document.getElementById('club-cards-view').style.display='flex';
+}
+
+function addCustomMember() {
+  const inp=document.getElementById('ct-member-inp');
+  const name=inp.value.trim();
+  if(!name||customMembers.includes(name)){inp.focus();return;}
+  customMembers.push(name);
+  inp.value='';
+  renderCustomMembers();
+  inp.focus();
+}
+
+function removeCustomMember(i) {
+  customMembers.splice(i,1);
+  renderCustomMembers();
+}
+
+function renderCustomMembers() {
+  const list=document.getElementById('ct-member-list');
+  if(!list) return;
+  if(customMembers.length===0){
+    list.innerHTML='<div class="ct-empty">Noch keine Spieler hinzugefügt</div>';
+  } else {
+    list.innerHTML=customMembers.map((name,i)=>`<div class="ct-member-item">
+      <div class="avatar" style="background:${avatarColor(name)}">${initials(name)}</div>
+      <span class="ct-member-name">${name}</span>
+      <button class="ct-member-del" onclick="removeCustomMember(${i})">✕</button>
+    </div>`).join('');
+  }
+  const btn=document.getElementById('ct-start-btn');
+  if(btn) btn.disabled=customMembers.length<2;
+}
+
+function confirmCustomTeam() {
+  if(customMembers.length<2) return;
+  const teamName=document.getElementById('ct-name-inp').value.trim()||'Mein Team';
+  CLUBS['custom']={id:'custom',name:teamName,color:'#7c4daa',members:[...customMembers]};
+  selectClub('custom');
+}
+function confirmReset() {
+  if(confirm('Alle Spiele zurücksetzen?')) { resetAllGames(); renderAll(); }
+}
+
+function showClubSelector() {
+  document.getElementById('front-page').style.display='none';
+  document.getElementById('club-selector').style.display='flex';
+}
+
+// URL-param based initialization — skip front-page when coming from index.html
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const club = params.get('club');
+  if (club && CLUBS[club]) {
+    // Auto-select club, skip front-page and club-selector overlays
+    document.getElementById('front-page').style.display = 'none';
+    document.getElementById('club-selector').style.display = 'none';
+    selectClub(club);
+  } else {
+    // Normal standalone entry — show front page
+    document.getElementById('front-page').style.display = 'flex';
+  }
+})();
+
+// Register service worker
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>

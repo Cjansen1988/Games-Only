@@ -1,1802 +1,1295 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Kegel Spiele</title>
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Spiele">
-<meta name="theme-color" content="#1a1a1a">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; font-size: 14px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎳 Harener Stadtmeisterschaft</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #1a237e; --primary-light: #3949ab;
+            --accent: #e65100; --success: #2e7d32; --danger: #c62828;
+            --klein: #1565c0;  --gross: #6a1b9a;
+            --bg: #f0f2f5; --card: #fff; --text: #212121; --text-light: #757575; --border: #e0e0e0;
+        }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-.topbar { background: #fff; border-bottom: 1px solid #e0ddd5; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.topbar-actions { display: flex; gap: 8px; }
-.btn { padding: 7px 14px; border-radius: 8px; border: 1px solid #d0cdc5; background: #fff; font-size: 13px; cursor: pointer; font-weight: 500; color: #1a1a1a; }
-.btn:active { background: #f0ede8; }
-.btn-danger { border-color: #e0a0a0; color: #c0392b; }
-.btn-danger:active { background: #fdf0f0; }
-.btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.btn-primary:active { background: #333; }
+        /* Header */
+        header { background:linear-gradient(135deg,#1a237e,#3949ab); color:white; padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; box-shadow:0 3px 10px rgba(0,0,0,.3); }
+        .header-left h1 { font-size:1.45rem; font-weight:800; }
+        .header-left p  { font-size:.82rem; opacity:.75; margin-top:.15rem; }
 
-/* Presence panel */
-.presence-panel { background: #fff; border-bottom: 1px solid #e0ddd5; padding: 10px 14px; }
-.presence-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; }
-.presence-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.presence-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px 5px 6px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid; user-select: none; transition: opacity 0.15s; }
-.presence-chip:active { opacity: 0.7; }
-.presence-chip.da { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
-.presence-chip.weg { background: #f5f5f5; color: #aaa; border-color: #ddd; opacity: 0.6; }
-.chip-avatar { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #555; flex-shrink: 0; }
+        /* Tab nav */
+        .tab-nav { background:white; border-bottom:1px solid var(--border); display:flex; overflow-x:auto; scrollbar-width:none; }
+        .tab-nav::-webkit-scrollbar { display:none; }
+        .tab-btn { flex-shrink:0; padding:.75rem 1rem; border:none; background:transparent; font-size:.83rem; font-weight:600; color:var(--text-light); cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap; }
+        .tab-btn:hover  { color:var(--primary); background:#f5f7ff; }
+        .tab-btn.active { color:var(--primary); border-bottom-color:var(--accent); }
+        .tab-btn.has-data::after { content:' ✓'; color:var(--success); font-size:.72rem; }
 
-/* Games list */
-.spiele-page { padding: 12px 12px 80px; }
-.spiel-card { background: #fff; border-radius: 10px; border: 1px solid #e0ddd5; overflow: hidden; margin-bottom: 12px; }
-.spiel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; }
-.spiel-header:active { background: #f5f4f0; }
-.spiel-title { font-size: 16px; font-weight: 600; }
-.spiel-meta { font-size: 12px; color: #888; margin-top: 2px; }
-.spiel-chevron { font-size: 18px; color: #aaa; transition: transform 0.2s; }
-.spiel-chevron.open { transform: rotate(180deg); }
-.spiel-body { display: none; border-top: 1px solid #f0ede8; padding: 16px; }
-.spiel-body.open { display: block; }
-.spiel-desc { font-size: 13px; color: #555; line-height: 1.55; background: #f5f4f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; border-left: 3px solid #1a1a1a; }
-.spiel-actions { display: flex; gap: 8px; margin-top: 14px; }
-.spiel-actions .btn { flex: 1; height: 42px; font-size: 14px; }
+        /* Layout */
+        main { max-width:880px; margin:0 auto; padding:1.5rem; }
+        .card { background:var(--card); border-radius:14px; padding:1.5rem; box-shadow:0 2px 12px rgba(0,0,0,.07); margin-bottom:1rem; }
+        .card-title { font-size:1.1rem; font-weight:700; color:var(--primary); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:2px solid var(--bg); }
+        label { font-weight:600; font-size:.88rem; color:#555; display:block; margin-bottom:.4rem; }
+        input[type="text"],input[type="number"] { border:2px solid var(--border); border-radius:9px; padding:.65rem 1rem; font-size:1rem; width:100%; transition:border-color .2s; outline:none; background:#fafafa; }
+        input:focus { border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(57,73,171,.12); background:white; }
 
-/* Score inputs */
-.score-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f5f4f0; }
-.score-row:last-of-type { border-bottom: none; }
-.score-name { display: flex; align-items: center; gap: 8px; flex: 1; font-size: 14px; font-weight: 500; }
-.score-input { width: 80px; height: 40px; border: 1px solid #d0cdc5; border-radius: 8px; padding: 0 10px; font-size: 16px; font-weight: 600; text-align: center; background: #fff; color: #1a1a1a; }
-.score-input:focus { outline: none; border-color: #888; }
-.result-list { margin-top: 14px; }
-.result-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; }
-.result-rank { font-size: 16px; font-weight: 700; width: 28px; text-align: center; color: #888; }
-.result-name { flex: 1; font-size: 14px; font-weight: 500; }
-.result-score { font-size: 16px; font-weight: 700; }
-.result-row.loser { background: #fff0f0; }
-.result-row.loser .result-rank, .result-row.loser .result-name, .result-row.loser .result-score { color: #c0392b; }
-.result-row.top { background: #f0fff4; }
-.result-row.top .result-rank { color: #27ae60; }
-.loser-badge { font-size: 11px; background: #fde8e8; color: #c0392b; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
-.winner-tag { font-size: 11px; background: #e8fde8; color: #27ae60; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
-.loser-count-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #f0ede8; }
-.loser-count-label { font-size: 13px; color: #555; flex: 1; }
-.stepper { display: flex; align-items: center; gap: 8px; }
-.stepper-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #d0cdc5; background: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1a1a1a; }
-.stepper-btn:active { background: #f0ede8; }
-.stepper-val { font-size: 16px; font-weight: 600; min-width: 20px; text-align: center; }
+        /* Buttons */
+        .btn { display:inline-flex; align-items:center; gap:.4rem; padding:.65rem 1.3rem; border-radius:9px; font-size:.88rem; font-weight:700; cursor:pointer; border:none; transition:all .18s; white-space:nowrap; }
+        .btn:disabled { opacity:.4; cursor:not-allowed; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:hover:not(:disabled) { background:var(--primary-light); transform:translateY(-1px); }
+        .btn-accent  { background:var(--accent); color:white; }
+        .btn-accent:hover:not(:disabled)  { opacity:.9; transform:translateY(-1px); }
+        .btn-success { background:var(--success); color:white; }
+        .btn-danger  { background:var(--danger); color:white; }
+        .btn-outline { background:transparent; border:2px solid var(--border); color:var(--text); }
+        .btn-outline:hover:not(:disabled) { border-color:var(--primary-light); color:var(--primary); }
+        .btn-ghost { background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.35); }
+        .btn-ghost:hover { background:rgba(255,255,255,.25); }
+        .btn-sm { padding:.35rem .75rem; font-size:.78rem; border-radius:7px; }
+        .btn-full { width:100%; justify-content:center; margin-top:1rem; }
 
-/* Hausnummer */
-.hn-legend { font-size: 11px; color: #888; margin-bottom: 12px; padding: 8px 10px; background: #f5f4f0; border-radius: 8px; }
-.hn-inputs { display: flex; align-items: center; gap: 5px; }
-.hn-digit { width: 42px; height: 44px; border-radius: 8px; border: 1.5px solid #d0cdc5; text-align: center; font-size: 20px; font-weight: 800; background: #fff; color: #1a1a1a; -moz-appearance: textfield; }
-.hn-digit::-webkit-outer-spin-button, .hn-digit::-webkit-inner-spin-button { -webkit-appearance: none; }
-.hn-digit:focus { outline: none; border-color: #1a1a1a; }
-.hn-sep { font-size: 18px; font-weight: 300; color: #ccc; }
-.hn-result { font-size: 18px; font-weight: 800; color: #1a5c2a; min-width: 44px; margin-left: 4px; }
+        /* Player list */
+        .player-list { display:flex; flex-direction:column; gap:.5rem; margin:.75rem 0 1rem; }
+        .player-item { display:flex; align-items:center; gap:.5rem; padding:.7rem 1rem; background:var(--bg); border-radius:9px; border:1.5px solid var(--border); flex-wrap:wrap; }
+        .player-item.aufschreiber { background:#fff3e0; border-color:#ffb74d; }
+        .player-name { flex:1; font-weight:600; font-size:.93rem; min-width:80px; }
+        .badge { font-size:.66rem; padding:.17rem .5rem; border-radius:20px; font-weight:700; }
+        .badge-auf   { background:#e65100; color:white; }
+        .badge-top6  { background:var(--success); color:white; }
+        .badge-ow    { background:#90a4ae; color:white; }
+        .badge-damen { background:var(--gross); color:white; }
+        .add-player-form { display:flex; gap:.5rem; margin-bottom:.5rem; }
+        .info-box { background:#e8eaf6; border-left:4px solid var(--primary-light); border-radius:0 9px 9px 0; padding:.75rem 1rem; font-size:.87rem; line-height:1.55; color:#283593; }
 
-/* Avatar */
-.avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #555; flex-shrink: 0; }
+        /* Score table */
+        .score-wrap { overflow-x:auto; border-radius:9px; border:1px solid var(--border); margin:1rem 0; }
+        table { width:100%; border-collapse:collapse; font-size:.86rem; }
+        thead tr { background:linear-gradient(135deg,var(--primary),var(--primary-light)); }
+        th { color:white; padding:.65rem .45rem; text-align:center; font-weight:700; white-space:nowrap; font-size:.78rem; }
+        th:first-child { text-align:left; padding-left:.9rem; min-width:110px; }
+        tbody tr:nth-child(even) td { background:#f7f8ff; }
+        tbody tr:hover td { background:#eef0ff; }
+        td { padding:.48rem .38rem; border-bottom:1px solid var(--border); text-align:center; vertical-align:middle; }
+        td:first-child { text-align:left; padding-left:.9rem; font-weight:600; }
+        tbody tr:last-child td { border-bottom:none; }
+        .auf-row td { background:#fff8f3 !important; }
+        .auf-row:hover td { background:#fff3e0 !important; }
+        .throw-cell { min-width:66px; }
+        .throw-wrap { display:flex; flex-direction:column; align-items:center; gap:.22rem; }
+        .throw-wrap input { width:50px; text-align:center; padding:.36rem .15rem; font-size:.88rem; border-radius:7px; }
+        .nk-btn { font-size:.62rem; padding:.11rem .38rem; border:1.5px solid #e65100; border-radius:5px; background:transparent; color:#e65100; cursor:pointer; font-weight:800; transition:all .15s; }
+        .nk-btn:hover  { background:#fff3e0; }
+        .nk-btn.active { background:#e65100; color:white; }
+        .nk-display { font-size:.85rem; font-weight:800; color:#e65100; padding:.36rem 0; }
+        .pumpe-btn { font-size:.62rem; padding:.11rem .38rem; border:1.5px solid #1565c0; border-radius:5px; background:transparent; color:#1565c0; cursor:pointer; font-weight:800; transition:all .15s; }
+        .pumpe-btn:hover { background:#e3f2fd; }
 
-/* Team games shared */
-.tanne-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.tanne-team-col { background: #f5f4f0; border-radius: 8px; padding: 10px; min-height: 60px; }
-.tanne-team-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 8px; }
-.tanne-team1-label { color: #1a6bc0; }
-.tanne-team2-label { color: #c01a1a; }
-.tanne-player-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 5px; border-radius: 20px; margin: 3px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; }
-.tanne-player-chip:active { opacity: 0.7; }
-.chip-unassigned { background: #e8e5de; color: #555; border-color: #d0cdc5; }
-.chip-team1 { background: #dceeff; color: #1a6bc0; border-color: #aaccee; }
-.chip-team2 { background: #ffdddd; color: #c01a1a; border-color: #eeaaaa; }
-.tanne-players-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0ede8; }
-.team-names-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.team-name-field { display: flex; flex-direction: column; gap: 3px; }
-.team-name-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-.team-name-label.t1 { color: #1a6bc0; }
-.team-name-label.t2 { color: #c01a1a; }
-.team-name-input { height: 36px; border: 1.5px solid #d0cdc5; border-radius: 8px; padding: 0 10px; font-size: 14px; font-weight: 600; background: #fff; color: #1a1a1a; }
-.team-name-input.t1 { border-color: #aaccee; background: #f5f9ff; color: #1a6bc0; }
-.team-name-input.t2 { border-color: #eeaaaa; background: #fff5f5; color: #c01a1a; }
-.team-name-input:focus { outline: none; border-color: #888; }
+        /* ── Spiel-Übersicht (keine Spieler) ── */
+        .ov-wrap { padding:.75rem 1rem 1rem; }
+        .ov-section { margin-bottom:1.1rem; }
+        .ov-section-title { font-size:.74rem; font-weight:800; letter-spacing:.4px; text-transform:uppercase; padding:.35rem .8rem; border-radius:7px; display:inline-block; margin-bottom:.65rem; }
+        .ov-section-title.blue  { background:#e3f2fd; color:var(--klein); }
+        .ov-section-title.purple{ background:#f3e5f5; color:var(--gross); }
+        .ov-section-title.grey  { background:var(--bg); color:var(--text-light); }
+        .ov-grid { display:flex; flex-wrap:wrap; gap:.55rem; }
+        .ov-card { border:1.5px solid var(--border); border-radius:10px; padding:.6rem .7rem; text-align:center; background:white; }
+        .ov-card.blue   { border-color:#90caf9; }
+        .ov-card.purple { border-color:#ce93d8; }
+        .ov-card-top { font-size:.7rem; font-weight:700; margin-bottom:.3rem; }
+        .ov-card.blue   .ov-card-top { color:var(--klein); }
+        .ov-card.purple .ov-card-top { color:var(--gross); }
+        .ov-card.grey   .ov-card-top { color:var(--text-light); }
+        .ov-card-pts { font-size:.7rem; font-weight:700; margin-top:.3rem; }
+        .ov-card.blue   .ov-card-pts { color:var(--klein); }
+        .ov-card.purple .ov-card-pts { color:var(--gross); }
+        .ov-hint { text-align:center; color:var(--text-light); font-size:.84rem; padding:.75rem .5rem .25rem; }
+        .total-cell { font-weight:800; font-size:1rem; color:var(--primary); }
 
-/* Tannenbaum */
-.tanne-trees { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
-.tanne-tree-wrap { background: #f5f4f0; border-radius: 10px; padding: 10px 6px 14px; }
-.tanne-tree-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; margin-bottom: 10px; }
-.tanne-tree-title.t1 { color: #1a6bc0; }
-.tanne-tree-title.t2 { color: #c01a1a; }
-.tanne-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 4px; }
-.tanne-cell { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; cursor: pointer; user-select: none; border: 1.5px solid; transition: all 0.1s; }
-.tanne-cell:active { transform: scale(0.92); }
-.tanne-cell.t1-active { background: #dceeff; color: #1a6bc0; border-color: #aaccee; }
-.tanne-cell.t1-done { background: #e8e5de; color: #bbb; border-color: #d0cdc5; text-decoration: line-through; }
-.tanne-cell.t2-active { background: #ffdddd; color: #c01a1a; border-color: #eeaaaa; }
-.tanne-cell.t2-done { background: #e8e5de; color: #bbb; border-color: #d0cdc5; text-decoration: line-through; }
-.tanne-progress { text-align: center; font-size: 12px; color: #888; margin-top: 8px; }
-.tanne-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+        /* Pin grids (Schräge 3 + Fredenbaum) */
+        .pic-nav,.fb-throw-section { margin-bottom:1rem; }
+        .pic-btn { padding:.42rem .88rem; border-radius:8px; border:2px solid var(--border); background:transparent; font-size:.82rem; font-weight:700; color:var(--text-light); cursor:pointer; transition:all .18s; }
+        .pic-btn:hover  { border-color:var(--primary-light); color:var(--primary); }
+        .pic-btn.active { background:var(--primary); border-color:var(--primary); color:white; }
+        .pic-btn.has-data::after { content:' ✓'; font-size:.72rem; opacity:.85; }
+        .pattern-strip { display:flex; align-items:center; gap:.75rem; background:var(--bg); border-radius:10px; padding:.75rem 1rem; margin-bottom:1rem; flex-wrap:wrap; }
+        .pattern-strip-label { font-size:.82rem; font-weight:700; color:var(--text-light); }
+        .pattern-info { font-size:.82rem; color:var(--text-light); margin-left:auto; }
+        .pin-cell { min-width:78px; padding:.4rem .3rem !important; }
+        .pin-wrap { display:flex; flex-direction:column; align-items:center; gap:.2rem; }
+        .pin-score { font-size:.78rem; font-weight:700; color:var(--primary); }
+        .pin-avail   { fill:#37474f; stroke:#212121; cursor:pointer; }
+        .pin-avail:hover { fill:#546e7a; }
+        .pin-knocked { fill:#388e3c; stroke:#1b5e20; cursor:pointer; }
+        .pin-out     { fill:#eeeeee; stroke:#bdbdbd; cursor:default; }
 
-/* 2x Abräumen */
-.abr-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
-.abr-team-box { border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.abr-team-box.t1 { background: #dceeff; border: 1.5px solid #aaccee; }
-.abr-team-box.t2 { background: #ffdddd; border: 1.5px solid #eeaaaa; }
-.abr-team-box.done-box { opacity: 0.7; }
-.abr-team-name { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-.abr-team-box.t1 .abr-team-name { color: #1a6bc0; }
-.abr-team-box.t2 .abr-team-name { color: #c01a1a; }
-.abr-throws { display: flex; align-items: center; gap: 10px; }
-.abr-throw-num { font-size: 36px; font-weight: 800; line-height: 1; min-width: 48px; text-align: center; color: #1a1a1a; }
-.abr-throw-label { font-size: 11px; color: #888; text-align: center; margin-top: 2px; }
-.abr-btn-throw { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #1a1a1a; background: #1a1a1a; color: #fff; font-size: 26px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.abr-btn-throw:active { transform: scale(0.92); background: #333; }
-.abr-btn-throw.minus { background: transparent; color: #888; border-color: #bbb; font-size: 22px; }
-.abr-btn-throw.minus:active { background: #f0ede8; }
-.abr-milestone-btns { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-.abr-milestone { width: 100%; padding: 10px 8px; border-radius: 8px; border: 1.5px solid; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.1s; }
-.abr-milestone:active { transform: scale(0.97); }
-.abr-milestone.first-inactive { background: transparent; color: #888; border-color: #ccc; }
-.abr-milestone.first-done { background: #fff3cd; color: #856404; border-color: #ffc107; }
-.abr-milestone.second-inactive { background: transparent; color: #888; border-color: #ccc; }
-.abr-milestone.second-done { background: #d4edda; color: #155724; border-color: #28a745; }
-.abr-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+        /* Fredenbaum nav */
+        .fb-nav { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem; align-items:flex-start; }
+        .fb-group { border:2px solid; border-radius:11px; padding:.65rem .85rem; flex-shrink:0; }
+        .fb-group.klein { border-color:var(--klein); background:#e3f2fd; }
+        .fb-group.gross { border-color:var(--gross); background:#f3e5f5; }
+        .fb-group-label { font-size:.7rem; font-weight:800; margin-bottom:.45rem; letter-spacing:.3px; }
+        .fb-group.klein .fb-group-label { color:var(--klein); }
+        .fb-group.gross .fb-group-label { color:var(--gross); }
+        .fb-group-btns { display:flex; gap:.3rem; flex-wrap:wrap; }
+        .fb-btn { padding:.38rem .55rem; border-radius:7px; border:1.5px solid var(--border); background:white; font-size:.82rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:.05rem; min-width:38px; transition:all .18s; }
+        .fb-btn .mult { font-size:.62rem; color:var(--text-light); }
+        .fb-btn.active { border-color:var(--primary); background:var(--primary); color:white; }
+        .fb-btn.active .mult { color:rgba(255,255,255,.75); }
+        .fb-btn.has-data { border-color:var(--success); }
+        .fb-btn.active.has-data { border-color:var(--primary); }
 
-/* Bis 100 */
-.b100-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 8px; }
-.b100-team-box { border-radius: 10px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: background 0.2s; }
-.b100-team-box.t1 { background: #dceeff; border: 1.5px solid #aaccee; }
-.b100-team-box.t2 { background: #ffdddd; border: 1.5px solid #eeaaaa; }
-.b100-team-box.flash-reset { background: #ff4444 !important; border-color: #cc0000 !important; }
-.b100-team-box.won { background: #d4edda; border-color: #28a745; }
-.b100-team-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-.b100-team-box.t1 .b100-team-name { color: #1a6bc0; }
-.b100-team-box.t2 .b100-team-name { color: #c01a1a; }
-.b100-team-box.won .b100-team-name { color: #155724; }
-.b100-score { font-size: 52px; font-weight: 800; line-height: 1; color: #1a1a1a; }
-.b100-team-box.won .b100-score { color: #155724; }
-.b100-score-label { font-size: 11px; color: #888; margin-top: -4px; }
-.b100-stats { display: flex; gap: 12px; }
-.b100-stat { text-align: center; }
-.b100-stat-num { font-size: 16px; font-weight: 700; color: #1a1a1a; }
-.b100-stat-label { font-size: 10px; color: #888; line-height: 1.2; }
-.b100-numpad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; width: 100%; }
-.b100-num-btn { height: 40px; border-radius: 7px; border: 1.5px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.6); font-size: 16px; font-weight: 700; cursor: pointer; color: #1a1a1a; }
-.b100-num-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.9); }
-.b100-num-btn.disabled { opacity: 0.35; pointer-events: none; }
-.b100-reset-msg { font-size: 12px; font-weight: 700; color: #c0392b; text-align: center; padding: 4px 0; min-height: 20px; }
-.b100-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+        /* Multiplier badge in table header */
+        .mult-badge { display:inline-block; background:rgba(255,255,255,.22); border-radius:4px; padding:.1rem .3rem; font-size:.7rem; margin-left:.25rem; }
 
-/* Blackjack */
-.bj-player-section { border-bottom: 1px solid #f0ede8; padding: 12px 0; }
-.bj-player-section:last-child { border-bottom: none; padding-bottom: 4px; }
-.bj-player-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.bj-player-name { flex: 1; font-size: 14px; font-weight: 600; }
-.bj-total { font-size: 28px; font-weight: 800; line-height: 1; color: #1a1a1a; min-width: 40px; text-align: right; }
-.bj-total.bust { color: #c0392b; }
-.bj-total.win { color: #27ae60; }
-.bj-status { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
-.bj-status.playing { background: #e8f0ff; color: #1a6bc0; }
-.bj-status.done-st { background: #e8f5e9; color: #2e7d32; }
-.bj-status.bust { background: #ffebee; color: #c0392b; }
-.bj-status.win21 { background: #fff3cd; color: #856404; }
-.bj-card-picker { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-.bj-card-btn { min-width: 40px; height: 44px; border-radius: 8px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; padding: 2px 6px; gap: 1px; }
-.bj-card-btn:active { background: #f0ede8; }
-.bj-card-btn.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.bj-card-btn.bj-card-locked { opacity: 0.4; pointer-events: none; }
-.bj-card-sub { font-size: 9px; font-weight: 500; opacity: 0.65; }
-.bj-numpad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 6px 0 5px; }
-.bj-num-btn { height: 42px; border-radius: 8px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 16px; font-weight: 700; cursor: pointer; color: #1a1a1a; }
-.bj-num-btn:active { background: #e8e5de; transform: scale(0.94); }
-.bj-throws-history { font-size: 11px; color: #aaa; text-align: center; padding: 3px 0; letter-spacing: 0.02em; }
-.bj-result-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; }
-.bj-result-row.bust-row { background: #fff0f0; }
-.bj-result-row.win-row { background: #f0fff4; }
-.bj-result-row.extra-loser { background: #fff5e5; }
-.bj-result-label { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
-.bj-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+        /* FB "kleiner only" cell */
+        .fb-skip-cell { text-align:center; color:var(--text-light); font-size:.78rem; padding:.5rem; line-height:1.4; }
 
-/* Tag-Nacht */
-.tn-player-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f0ede8; }
-.tn-player-row:last-of-type { border-bottom: none; }
-.tn-player-info { display: flex; align-items: center; gap: 8px; width: 90px; flex-shrink: 0; padding-top: 4px; }
-.tn-player-name { font-size: 12px; font-weight: 600; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tn-inputs { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-.tn-group { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-.tn-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; width: 22px; flex-shrink: 0; }
-.tn-group-label.day  { color: #c8860a; }
-.tn-group-label.night { color: #1a1a6a; }
-.tn-inp { width: 48px; height: 38px; border-radius: 7px; border: 1.5px solid #d0cdc5; text-align: center; font-size: 15px; font-weight: 700; background: #fff; color: #1a1a1a; -moz-appearance: textfield; }
-.tn-inp::-webkit-outer-spin-button, .tn-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
-.tn-inp:focus { outline: none; border-color: #888; }
-.tn-inp.night { background: #1a1a3a; color: #fff; border-color: #1a1a3a; }
-.tn-inp.night3 { background: #000; color: #ffd700; border-color: #000; }
-.tn-mult { font-size: 10px; color: #aaa; font-weight: 600; }
-.tn-total-col { width: 52px; flex-shrink: 0; text-align: right; padding-top: 8px; }
-.tn-total-val { font-size: 22px; font-weight: 800; color: #1a1a1a; line-height: 1; }
-.tn-total-label { font-size: 10px; color: #aaa; }
+        /* Results */
+        .result-row.top6 td          { background:#e8f5e9 !important; }
+        .result-row.top6 td:first-child { border-left:4px solid var(--success); }
+        .result-row.ow   td          { background:#f5f5f5 !important; opacity:.72; }
+        .rank-cell { font-weight:700; font-size:1rem; }
 
-/* Berg und Talfahrt */
-.bt-player-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f0ede8; }
-.bt-player-row:last-of-type { border-bottom: none; }
-.bt-player-info { display: flex; align-items: center; gap: 8px; width: 90px; flex-shrink: 0; padding-top: 4px; }
-.bt-player-name { font-size: 12px; font-weight: 600; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bt-inputs { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-.bt-group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.bt-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; width: 22px; flex-shrink: 0; }
-.bt-group-label.berg { color: #1a5c2a; }
-.bt-group-label.tal  { color: #b52222; }
-.bt-inp { width: 42px; height: 38px; border-radius: 7px; border: 1.5px solid #d0cdc5; text-align: center; font-size: 15px; font-weight: 700; background: #fff; color: #1a1a1a; -moz-appearance: textfield; }
-.bt-inp::-webkit-outer-spin-button, .bt-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
-.bt-inp:focus { outline: none; border-color: #888; }
-.bt-inp.berg { background: #e8f5e9; color: #1a5c2a; border-color: #a5d6a7; }
-.bt-inp.tal  { background: #fdecea; color: #b52222; border-color: #f5a0a0; }
-.bt-sub { font-size: 10px; color: #aaa; font-weight: 600; min-width: 28px; text-align: right; }
-.bt-total-col { width: 52px; flex-shrink: 0; text-align: right; padding-top: 8px; }
-.bt-total-val { font-size: 22px; font-weight: 800; color: #1a1a1a; line-height: 1; }
-.bt-total-val.negative { color: #b52222; }
-.bt-total-label { font-size: 10px; color: #aaa; }
+        /* Standings view */
+        #standingsView { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); color:white; }
+        .sv-header { padding:1.5rem 2rem 1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; border-bottom:1px solid rgba(255,255,255,.12); }
+        .sv-header h1 { font-size:1.8rem; font-weight:900; }
+        .sv-pulse { width:8px; height:8px; border-radius:50%; background:#69f0ae; animation:pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+        .sv-refresh { font-size:.8rem; opacity:.6; display:flex; align-items:center; gap:.4rem; }
+        .sv-body { padding:1.5rem 2rem; max-width:700px; margin:0 auto; }
+        .sv-row { display:flex; align-items:center; gap:1rem; padding:.85rem 1.1rem; border-radius:12px; margin-bottom:.6rem; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); }
+        .sv-row.top6 { background:rgba(105,240,174,.12); border-color:rgba(105,240,174,.3); }
+        .sv-row.ow   { opacity:.5; background:rgba(255,255,255,.03); }
+        .sv-rank-num { font-size:1.4rem; font-weight:900; width:2.2rem; text-align:center; flex-shrink:0; }
+        .sv-player-name { flex:1; font-weight:700; font-size:1rem; }
+        .sv-player-sub  { font-size:.75rem; opacity:.55; margin-top:.1rem; }
+        .sv-scores { text-align:right; }
+        .sv-total  { font-size:1.3rem; font-weight:900; }
+        .sv-rounds { font-size:.72rem; opacity:.6; }
+        .sv-sep { margin:1rem 0; padding:.5rem 1.1rem; opacity:.4; font-size:.8rem; letter-spacing:.5px; text-transform:uppercase; }
 
-/* MADN */
-.madn-player-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid #f0ede8; }
-.madn-player-row:last-child { border-bottom: none; }
-.madn-player-row.madn-active-row { background: #eef5ff; border-radius: 8px; padding: 9px 8px; margin: 2px -8px; border-bottom: none; }
-.madn-order-badge { width: 22px; height: 22px; border-radius: 50%; background: #e8e5de; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #888; flex-shrink: 0; }
-.madn-order-badge.active { background: #1a1a1a; color: #fff; }
-.madn-order-badge.won { background: #1a5c2a; color: #fff; }
-.madn-name-col { width: 76px; flex-shrink: 0; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.madn-progress-col { flex: 1; }
-.madn-progress-bar-bg { height: 9px; background: #f0ede8; border-radius: 5px; overflow: hidden; }
-.madn-progress-fill { height: 100%; border-radius: 5px; transition: width 0.35s; }
-.madn-score-num { width: 34px; font-size: 16px; font-weight: 800; text-align: right; flex-shrink: 0; }
-.madn-score-num.won { color: #1a5c2a; }
-.madn-reset-tag { font-size: 10px; font-weight: 700; color: #fff; background: #b52222; padding: 1px 6px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; }
-.madn-reset-tag-spacer { width: 36px; flex-shrink: 0; }
-.madn-active-section { background: #eef5ff; border-radius: 12px; padding: 12px 14px; margin: 10px 0 4px; border: 1.5px solid #b3d4f5; }
-.madn-active-label { font-size: 12px; font-weight: 700; color: #1a6bc0; margin-bottom: 10px; }
-.madn-numpad { display: flex; gap: 5px; }
-.madn-num-btn { flex: 1; height: 50px; border-radius: 9px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
-.madn-num-btn:active { background: #1a6bc0; color: #fff; border-color: #1a6bc0; }
-.madn-winner-banner { text-align: center; font-size: 20px; font-weight: 800; color: #1a5c2a; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 12px; padding: 18px; margin-top: 14px; }
+        /* Toast */
+        #toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:#212121; color:white; padding:.7rem 1.4rem; border-radius:50px; font-size:.9rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.25); opacity:0; transition:opacity .3s; pointer-events:none; z-index:999; }
+        #toast.show { opacity:1; }
 
-/* Club Selector */
-.club-selector-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; background: #f5f4f0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
-.club-selector-title { font-size: 24px; font-weight: 800; color: #1a1a1a; margin-bottom: 6px; text-align: center; }
-.club-selector-sub { font-size: 14px; color: #888; margin-bottom: 36px; text-align: center; }
-.club-cards { display: flex; gap: 14px; width: 100%; max-width: 480px; }
-.club-card { flex: 1; background: #fff; border-radius: 16px; border: 2px solid #e0ddd5; padding: 24px 14px; display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; transition: transform 0.12s, border-color 0.12s; }
-.club-card:active { transform: scale(0.96); }
-.club-card:hover { border-color: #bbb; }
-.club-badge-lg { width: 72px; height: 72px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; }
-.club-card-name { font-size: 15px; font-weight: 700; text-align: center; line-height: 1.35; color: #1a1a1a; }
-.club-card-count { font-size: 12px; color: #999; }
+        /* Utility */
+        .hidden { display:none !important; }
+        .mt-1 { margin-top:.5rem; } .mt-2 { margin-top:1rem; }
+        .flex { display:flex; } .gap-1 { gap:.5rem; } .flex-wrap { flex-wrap:wrap; }
+        .justify-between { justify-content:space-between; }
+        .empty-hint { color:var(--text-light); font-size:.9rem; text-align:center; padding:1.25rem; }
 
-/* Custom team form */
-.ct-view { display: none; flex-direction: column; width: 100%; max-width: 440px; gap: 12px; }
-.ct-back { align-self: flex-start; background: none; border: none; color: #888; font-size: 14px; cursor: pointer; padding: 0 0 2px; font-weight: 600; }
-.ct-back:hover { color: #1a1a1a; }
-.ct-heading { font-size: 20px; font-weight: 800; color: #1a1a1a; text-align: center; }
-.ct-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
-.ct-input { height: 46px; border: 1.5px solid #d0cdc5; border-radius: 10px; padding: 0 14px; font-size: 15px; background: #fff; color: #1a1a1a; width: 100%; }
-.ct-input:focus { outline: none; border-color: #888; }
-.ct-add-row { display: flex; gap: 8px; }
-.ct-add-row .ct-input { flex: 1; }
-.ct-add-btn { height: 46px; min-width: 60px; border-radius: 10px; border: none; background: #1a1a1a; color: #fff; font-size: 22px; font-weight: 300; cursor: pointer; }
-.ct-add-btn:active { background: #333; }
-.ct-member-list { background: #fff; border-radius: 12px; border: 1px solid #e0ddd5; max-height: 200px; overflow-y: auto; }
-.ct-member-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f0ede8; }
-.ct-member-item:last-child { border-bottom: none; }
-.ct-member-name { flex: 1; font-size: 14px; font-weight: 500; }
-.ct-member-del { background: none; border: none; color: #c0392b; font-size: 18px; cursor: pointer; padding: 2px 6px; }
-.ct-empty { font-size: 13px; color: #bbb; text-align: center; padding: 18px; }
-.ct-footer { display: flex; gap: 8px; }
-.ct-footer .btn { flex: 1; height: 48px; font-size: 15px; }
+        /* ── Team Select ── */
+        .ts-team-badge { display:inline-block; margin-top:.65rem; font-size:.78rem; font-weight:700; padding:.25rem .8rem; border-radius:20px; background:#e8eaf6; color:var(--primary); }
+        .ms-back-btn { position:absolute; top:1.2rem; left:1.5rem; background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); border-radius:8px; padding:.4rem .9rem; font-size:.82rem; font-weight:700; cursor:pointer; transition:all .18s; }
+        .ms-back-btn:hover { background:rgba(255,255,255,.25); }
+        #modeSelectScreen, #teamSelectScreen { position:relative; }
 
-/* Front Page */
-.fp-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000; background: #f5f4f0; display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 0; overflow-y: auto; }
-.fp-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px 24px; text-align: center; }
-.fp-ball { font-size: 72px; line-height: 1; margin-bottom: 20px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.13)); }
-.fp-title { font-size: 30px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; margin-bottom: 8px; }
-.fp-sub { font-size: 15px; color: #888; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 28px; }
-.fp-desc { font-size: 16px; color: #444; line-height: 1.65; max-width: 340px; }
-.fp-features { width: 100%; max-width: 400px; padding: 0 24px 0; display: flex; flex-direction: column; gap: 12px; }
-.fp-feature { display: flex; align-items: flex-start; gap: 14px; background: #fff; border-radius: 14px; border: 1px solid #e8e5de; padding: 14px 16px; }
-.fp-feature-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
-.fp-feature-text { display: flex; flex-direction: column; gap: 2px; }
-.fp-feature-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-.fp-feature-desc { font-size: 13px; color: #777; line-height: 1.4; }
-.fp-cta { width: 100%; max-width: 400px; padding: 24px 24px 40px; }
-.fp-cta-btn { width: 100%; padding: 18px; border-radius: 14px; border: none; background: #1a1a1a; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; letter-spacing: 0.01em; }
-.fp-cta-btn:active { background: #333; transform: scale(0.98); }
-.fp-hint { text-align: center; font-size: 12px; color: #bbb; margin-top: 10px; }
+        /* ── Mode Select ── */
+        #modeSelectScreen { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; }
+        .ms-header { text-align:center; color:white; margin-bottom:2.5rem; }
+        .ms-header h1 { font-size:2.2rem; font-weight:900; }
+        .ms-header p  { font-size:1rem; opacity:.7; margin-top:.5rem; }
+        .ms-cards { display:flex; gap:1.5rem; flex-wrap:wrap; justify-content:center; max-width:680px; }
+        .ms-card  { background:white; border-radius:18px; padding:2rem 1.75rem; cursor:pointer; transition:all .22s; text-align:center; width:265px; box-shadow:0 8px 32px rgba(0,0,0,.3); border:3px solid transparent; }
+        .ms-card:hover { transform:translateY(-6px); box-shadow:0 18px 50px rgba(0,0,0,.4); }
+        .ms-card.ms-champ { border-color:var(--accent); }
+        .ms-icon  { font-size:3rem; margin-bottom:.75rem; line-height:1; }
+        .ms-title { font-size:1.25rem; font-weight:800; color:var(--primary); margin-bottom:.55rem; }
+        .ms-desc  { font-size:.82rem; color:#666; line-height:1.6; }
+        .ms-tag   { display:inline-block; margin-top:.85rem; font-size:.71rem; font-weight:700; padding:.22rem .7rem; border-radius:20px; }
+        .ms-card .ms-tag        { background:var(--bg); color:var(--text-light); }
+        .ms-card.ms-champ .ms-tag { background:#fff3e0; color:var(--accent); }
 
-/* 4 Gewinnt */
-.vg-wrap { background: #1a1a2e; border-radius: 12px; padding: 10px; margin-bottom: 2px; }
-.vg-board { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-bottom: 6px; }
-.vg-cell { aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,0.1); }
-.vg-cell.t1 { background: #2980d9; }
-.vg-cell.t2 { background: #e74c3c; }
-.vg-cell.win-cell { background: #f1c40f; box-shadow: 0 0 0 2px #f39c12; }
-.vg-col-btns { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
-.vg-col-btn { aspect-ratio: 1; border-radius: 7px; border: none; background: rgba(255,255,255,0.18); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
-.vg-col-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.88); }
-.vg-col-btn:disabled { opacity: 0.22; pointer-events: none; }
-.vg-pumpe-row { margin: 8px 0 0; }
-.vg-pumpe-btn { width: 100%; padding: 11px; border-radius: 9px; border: 1.5px solid #e0a0a0; background: #fff8f8; color: #c0392b; font-size: 14px; font-weight: 600; cursor: pointer; }
-.vg-pumpe-btn:active { background: #fde8e8; }
-.vg-turn-badge { text-align: center; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 8px; margin-bottom: 10px; }
-.vg-turn-badge.t1 { background: #dceeff; color: #1a6bc0; }
-.vg-turn-badge.t2 { background: #ffdddd; color: #c01a1a; }
-.vg-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 15px; font-weight: 600; }
+        /* ── Normal Games ── */
+        .score-input { border:1.5px solid var(--border); border-radius:7px; padding:.3rem .4rem; font-size:.9rem; width:62px; text-align:center; outline:none; background:#fafafa; transition:border-color .15s; }
+        .score-input:focus { border-color:var(--primary-light); background:white; }
+        .game-col-hdr { display:flex; flex-direction:column; align-items:center; gap:.18rem; }
+        .game-name-inp { border:none; background:transparent; font-size:.74rem; font-weight:700; color:white; text-align:center; width:72px; outline:none; cursor:pointer; }
+        .game-name-inp:focus { background:rgba(255,255,255,.15); border-radius:4px; }
+        .del-game-btn  { font-size:.6rem; opacity:.5; cursor:pointer; background:transparent; border:none; color:white; padding:.1rem .3rem; border-radius:3px; line-height:1; }
+        .del-game-btn:hover { opacity:1; background:rgba(255,255,255,.2); }
+        .ns-total-cell { font-weight:800; font-size:1rem; color:var(--primary); }
+        .ns-rank { font-weight:700; }
+        .ns-result-row.top { background:#e8f5e9 !important; }
+        .ns-result-row.top td:first-child { border-left:4px solid var(--success); }
 
-/* Busfahren */
-.bf-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 8px; }
-.bf-num-btn { height: 52px; border-radius: 10px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 22px; font-weight: 800; cursor: pointer; color: #1a1a1a; }
-.bf-num-btn:active { background: #1a1a1a; color: #fff; transform: scale(0.93); }
-.bf-num-btn:disabled { opacity: 0.3; pointer-events: none; }
-.bf-pumpe-btn { width: 100%; height: 46px; border-radius: 10px; border: 1.5px solid #e0a0a0; background: #fff8f8; color: #c0392b; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
-.bf-pumpe-btn:active { background: #fde8e8; }
-.bf-pumpe-btn:disabled { opacity: 0.3; pointer-events: none; }
-.bf-turn-badge { text-align: center; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; background: #f0ede8; color: #1a1a1a; }
-.bf-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 10px; padding: 14px; margin-bottom: 14px; font-size: 16px; font-weight: 700; }
-</style>
+        @media (max-width:600px) {
+            main { padding:.75rem; } .card { padding:1rem; }
+            th,td { padding:.35rem .2rem; font-size:.76rem; }
+            th:first-child,td:first-child { padding-left:.4rem; min-width:85px; }
+            .throw-wrap input { width:42px; font-size:.8rem; }
+            .nk-btn { font-size:.58rem; }
+            .sv-body { padding:1rem; } .sv-header { padding:1rem; }
+            .fb-nav { gap:.4rem; }
+            .ms-card { width:100%; max-width:320px; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="front-page" class="fp-overlay">
-  <div class="fp-hero">
-    <div class="fp-ball">🎳</div>
-    <div class="fp-title">Kegel Spiele</div>
-    <div class="fp-sub">Spieleabend-App</div>
-    <p class="fp-desc">Eine App für euren Kegelabend — beliebte Kegelspiele, direkt erklärt und automatisch ausgewertet.</p>
-  </div>
-
-  <div class="fp-features">
-    <div class="fp-feature">
-      <div class="fp-feature-icon">📖</div>
-      <div class="fp-feature-text">
-        <div class="fp-feature-title">Erklärungen inklusive</div>
-        <div class="fp-feature-desc">Jedes Spiel hat eine kurze Anleitung — ideal für Neulinge und als Auffrischung.</div>
-      </div>
+<!-- ══════════ TEAM SELECT ══════════ -->
+<div id="teamSelectScreen" class="hidden">
+    <div class="ms-header">
+        <h1>🎳 Harener Stadtmeisterschaft</h1>
+        <p>Welches Team spielt heute?</p>
     </div>
-    <div class="fp-feature">
-      <div class="fp-feature-icon">🏆</div>
-      <div class="fp-feature-text">
-        <div class="fp-feature-title">Automatische Auswertung</div>
-        <div class="fp-feature-desc">Punkte eintragen, auf „Auswerten" drücken — die App zeigt sofort wer verloren hat.</div>
-      </div>
+    <div class="ms-cards" style="max-width:900px">
+        <div class="ms-card" onclick="selectTeam('blackout')">
+            <div class="ms-icon">🖤</div>
+            <div class="ms-title">Blackout Boys</div>
+            <div class="ms-desc">Christian J. · Christian W. · Christian L. · Sebastian J. · Laurenz · Thorben · Hannes · Heinrich · Jan-Henning · Lucas · Lukas · Matthias · Michael · Dimi · Sebastian E.</div>
+            <span class="ts-team-badge">15 Spieler · Preset</span>
+        </div>
+        <div class="ms-card" onclick="selectTeam('harske')">
+            <div class="ms-icon">⚡</div>
+            <div class="ms-title">Harske Bössels</div>
+            <div class="ms-desc">Nils · Jonas · Steffen · Marcel · Arling · Laui · Nico · Pinkernell · Wiktor · Henrik · Alex · Andre · Dennis · Arthur · Lukas · Simon · Tim</div>
+            <span class="ts-team-badge">17 Spieler · Preset</span>
+        </div>
+        <div class="ms-card" onclick="selectTeam('custom')">
+            <div class="ms-icon">➕</div>
+            <div class="ms-title">Neues Team</div>
+            <div class="ms-desc">Eigene Spieler anlegen und Mannschaftsname vergeben</div>
+            <span class="ts-team-badge" style="background:var(--bg);color:var(--text-light)">Leer starten</span>
+        </div>
     </div>
-    <div class="fp-feature">
-      <div class="fp-feature-icon">👥</div>
-      <div class="fp-feature-text">
-        <div class="fp-feature-title">Flexibel für jede Runde</div>
-        <div class="fp-feature-desc">Wählt euren Club oder erstellt ein neues Team mit eigenen Namen — und los geht's.</div>
-      </div>
-    </div>
-    <div class="fp-feature">
-      <div class="fp-feature-icon">🎯</div>
-      <div class="fp-feature-text">
-        <div class="fp-feature-title">Alle Spiele sind „In die Vollen"</div>
-        <div class="fp-feature-desc">Tannenbaum, Abräumen, Bis 100, Blackjack, 4 Gewinnt und mehr.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="fp-cta">
-    <button class="fp-cta-btn" onclick="showClubSelector()">Team auswählen &amp; loslegen →</button>
-    <div class="fp-hint">Blackout Boys · Harske Bössels · Eigenes Team</div>
-  </div>
 </div>
 
-<div id="club-selector" class="club-selector-overlay">
-
-  <!-- Clubauswahl -->
-  <div id="club-cards-view" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:480px;">
-    <div class="club-selector-title">🎳 Welcher Club?</div>
-    <div class="club-selector-sub">Wählt euren Club für diesen Abend</div>
-    <div class="club-cards">
-      <div class="club-card" onclick="selectClub('bb')">
-        <div class="club-badge-lg" style="background:#1a5c2a;">BB</div>
-        <div class="club-card-name">Blackout Boys</div>
-        <div class="club-card-count">15 Mitglieder</div>
-      </div>
-      <div class="club-card" onclick="selectClub('hb')">
-        <div class="club-badge-lg" style="background:#1a3575;">HB</div>
-        <div class="club-card-name">Harske Bössels</div>
-        <div class="club-card-count">17 Mitglieder</div>
-      </div>
-      <div class="club-card" onclick="showCustomTeamForm()">
-        <div class="club-badge-lg" style="background:#7c4daa;font-size:28px;letter-spacing:0;">✏️</div>
-        <div class="club-card-name">Neues Team</div>
-        <div class="club-card-count">Eigene Namen</div>
-      </div>
+<!-- ══════════ MODE SELECT ══════════ -->
+<div id="modeSelectScreen" class="hidden">
+    <button class="ms-back-btn" onclick="backToTeamSelect()">← Team wechseln</button>
+    <div class="ms-header">
+        <h1>🎳 Harener Stadtmeisterschaft</h1>
+        <p id="modeSelectTeamLabel">Was möchtest du heute machen?</p>
     </div>
-  </div>
-
-  <!-- Eigenes Team erstellen -->
-  <div id="custom-team-view" class="ct-view">
-    <button class="ct-back" onclick="backToClubs()">← Zurück</button>
-    <div class="ct-heading">✏️ Neues Team</div>
-
-    <div>
-      <div class="ct-label" style="margin-bottom:6px;">Teamname</div>
-      <input id="ct-name-inp" class="ct-input" type="text" placeholder="z.B. Kegel-Freunde" maxlength="30" autocomplete="off">
+    <div class="ms-cards">
+        <div class="ms-card" onclick="selectMode('normal')">
+            <div class="ms-icon">🎳</div>
+            <div class="ms-title">Normale Spiele</div>
+            <div class="ms-desc">Freie Punkteeingabe für beliebige Spiele · Spieler anlegen · automatisches Gesamtranking</div>
+            <span class="ms-tag">Kein festes Schema</span>
+        </div>
+        <div class="ms-card ms-champ" onclick="selectMode('stadtmeisterschaft')">
+            <div class="ms-icon">🏆</div>
+            <div class="ms-title">Stadtmeisterschaft</div>
+            <div class="ms-desc">Fünf in die Vollen · Schräge Drei · Fredenbaum · offizielle Wertung mit Top‑6</div>
+            <span class="ms-tag">Offizielles Regelwerk</span>
+        </div>
     </div>
-
-    <div>
-      <div class="ct-label" style="margin-bottom:6px;">Spieler hinzufügen</div>
-      <div class="ct-add-row">
-        <input id="ct-member-inp" class="ct-input" type="text" placeholder="Name..." maxlength="25" autocomplete="off"
-          onkeydown="if(event.key==='Enter')addCustomMember()">
-        <button class="ct-add-btn" onclick="addCustomMember()">+</button>
-      </div>
-    </div>
-
-    <div id="ct-member-list" class="ct-member-list">
-      <div class="ct-empty">Noch keine Spieler hinzugefügt</div>
-    </div>
-
-    <div class="ct-footer">
-      <button class="btn" onclick="backToClubs()">Abbrechen</button>
-      <button id="ct-start-btn" class="btn btn-primary" onclick="confirmCustomTeam()" disabled>Starten</button>
-    </div>
-  </div>
-
 </div>
 
-<div class="topbar">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div id="topbar-logo-bb" style="display:none;width:36px;height:36px;border-radius:6px;background:#1a5c2a;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-1px;">BB</div>
-    <div id="topbar-logo-hb" style="display:none;width:36px;height:36px;border-radius:6px;background:#1a3575;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-1px;">HB</div>
-    <div id="topbar-logo-custom" style="display:none;width:36px;height:36px;border-radius:6px;background:#7c4daa;align-items:center;justify-content:center;font-size:18px;">✏️</div>
-    <div>
-      <div id="topbar-club-name" style="font-size:15px;font-weight:700;line-height:1.15;">Kegel Spiele</div>
-      <div style="font-size:10px;color:#888;font-weight:500;letter-spacing:0.04em;">SPIELE-APP</div>
+<!-- ══════════ MAIN APP (STADTMEISTERSCHAFT) ══════════ -->
+<div id="appMain" class="hidden">
+    <header>
+        <div class="header-left">
+            <h1>🎳 Harener Stadtmeisterschaft</h1>
+            <p id="teamLabel">Mannschaft erfassen</p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-ghost btn-sm" onclick="backToModeSelect()">← Auswahl</button>
+            <button class="btn btn-ghost btn-sm" onclick="openStandings()">📊 Zwischenstand ↗</button>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" id="navMannschaft" onclick="switchTab('mannschaft')">👥 Mannschaft</button>
+        <button class="tab-btn"        id="navRunde1"     onclick="switchTab('runde1')">🎳 5 i.d.V. R1</button>
+        <button class="tab-btn"        id="navRunde2"     onclick="switchTab('runde2')">🎳 5 i.d.V. R2</button>
+        <button class="tab-btn"        id="navSchraege3"  onclick="switchTab('schraege3')">🎯 Schräge 3</button>
+        <button class="tab-btn"        id="navFredenbaum" onclick="switchTab('fredenbaum')">🌳 Fredenbaum</button>
+        <button class="tab-btn"        id="navErgebnis"   onclick="switchTab('ergebnis')">🏆 Ergebnis</button>
+    </nav>
+
+    <main>
+
+        <!-- Mannschaft -->
+        <div id="tabMannschaft">
+            <div class="card">
+                <div class="card-title">🏆 Mannschaft</div>
+                <label>Mannschaftsname</label>
+                <input type="text" id="teamNameInput" placeholder="z.B. SKC Sonnenschein" maxlength="60" oninput="onTeamName()" />
+            </div>
+            <div class="card">
+                <div class="card-title">👥 Spieler</div>
+                <div class="add-player-form">
+                    <input type="text" id="playerInput" placeholder="Name des Spielers" maxlength="40" style="flex:1"
+                           onkeydown="if(event.key==='Enter') addPlayer()" />
+                    <button class="btn btn-primary" onclick="addPlayer()">+ Hinzufügen</button>
+                </div>
+                <div class="player-list" id="playerList">
+                    <p class="empty-hint">Noch keine Spieler hinzugefügt.</p>
+                </div>
+                <div class="info-box" id="aufschreiberHint" style="display:none">
+                    <strong>ℹ️ Aufschreiber</strong> können mitspielen, werden aber als <em>„Ohne Wertung"</em> gelistet.<br>
+                    <strong>♀ Damen</strong> kegeln den <em>kleinen Fredenbaum</em> (Würfe 1–4).<br>
+                    <strong>♂ Herren</strong> (Standard) kegeln den <em>großen Fredenbaum</em> (alle 10 Würfe).<br>
+                    Die <strong>6 besten</strong> gewerteten Spieler kommen in die Endwertung.
+                </div>
+            </div>
+        </div>
+
+        <!-- 5 i.d.V. Runde 1 -->
+        <div id="tabRunde1" class="hidden">
+            <div class="card">
+                <div class="card-title">🎳 Fünf in die vollen – Runde 1</div>
+                <div class="info-box">5 Würfe · Jeder Kegel = 1 Pkt · <strong>Kranz</strong> = alle 9 = 10 Pkt · <strong>Pumpe</strong> = 0</div>
+                <div class="score-wrap" id="scoreWrap1"></div>
+                <div id="noPlayers1" class="hidden"><p class="empty-hint">Erst Spieler anlegen.</p></div>
+            </div>
+        </div>
+
+        <!-- 5 i.d.V. Runde 2 -->
+        <div id="tabRunde2" class="hidden">
+            <div class="card">
+                <div class="card-title">🎳 Fünf in die vollen – Runde 2</div>
+                <div class="info-box">5 Würfe · Jeder Kegel = 1 Pkt · <strong>Kranz</strong> = alle 9 = 10 Pkt · <strong>Pumpe</strong> = 0</div>
+                <div class="score-wrap" id="scoreWrap2"></div>
+                <div id="noPlayers2" class="hidden"><p class="empty-hint">Erst Spieler anlegen.</p></div>
+            </div>
+        </div>
+
+        <!-- Schräge 3 -->
+        <div id="tabSchraege3" class="hidden">
+            <div class="card">
+                <div class="card-title">🎯 Schräge Drei</div>
+                <div class="info-box" style="margin-bottom:1rem">1 Wurf pro Bild · Jeder Kegel = 1 Pkt · <strong>Schwarz</strong> = steht · <strong>Grau</strong> = hochgezogen</div>
+                <div class="pic-nav" id="picNav" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem"></div>
+                <div class="pattern-strip" id="patternStrip"></div>
+                <div class="score-wrap" id="s3Table"></div>
+                <div id="noPlayersS3" class="hidden"><p class="empty-hint">Erst Spieler anlegen.</p></div>
+            </div>
+        </div>
+
+        <!-- Fredenbaum -->
+        <div id="tabFredenbaum" class="hidden">
+            <div class="card">
+                <div class="card-title">🌳 Fredenbaum</div>
+                <div class="info-box" style="margin-bottom:1rem">
+                    10 Würfe (Herren) / 4 Würfe (Damen) ·
+                    Getroffen Kegel × Wertung des Wurfes = Punkte ·
+                    <strong>Damen/Herren</strong> in der Mannschaft einstellen
+                </div>
+                <div id="fbNav"></div>
+                <div class="pattern-strip" id="fbPatternStrip"></div>
+                <div class="score-wrap" id="fbTable"></div>
+                <div id="noPlayersFb" class="hidden"><p class="empty-hint">Erst Spieler anlegen.</p></div>
+            </div>
+        </div>
+
+        <!-- Ergebnis -->
+        <div id="tabErgebnis" class="hidden">
+            <div class="card">
+                <div class="card-title">🏆 Gesamtergebnis</div>
+                <div id="ergebnisTeam" style="color:var(--text-light);font-size:.9rem;margin-bottom:.75rem;"></div>
+                <div class="score-wrap" id="ergebnisTable"></div>
+                <div id="ergebnisEmpty" class="hidden"><p class="empty-hint">Noch keine Punkte eingetragen.</p></div>
+                <div class="info-box mt-2" id="ergebnisHint" style="display:none">
+                    ✅ Die <strong>6 besten</strong> Spieler (grün markiert) kommen in die Gesamtwertung.
+                </div>
+                <div id="top6Summary" style="display:none; margin-top:1rem; background:linear-gradient(135deg,#1a237e,#3949ab); color:white; border-radius:12px; padding:1rem 1.25rem;">
+                    <div style="font-size:.78rem; font-weight:700; opacity:.75; letter-spacing:.5px; text-transform:uppercase; margin-bottom:.35rem">🏆 Gesamtscore Top 6</div>
+                    <div style="font-size:2.2rem; font-weight:900; line-height:1;" id="top6Score">0</div>
+                    <div style="font-size:.76rem; opacity:.65; margin-top:.4rem; line-height:1.5;" id="top6Breakdown"></div>
+                </div>
+                <div class="flex gap-1 mt-2 flex-wrap">
+                    <button class="btn btn-outline btn-sm" onclick="resetAll()">🔄 Neues Spiel</button>
+                    <button class="btn btn-primary btn-sm" onclick="copyResults()">📋 Ergebnis kopieren</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportPdf('summary')" title="Nur Endrangliste">📄 PDF Kurzfassung</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportPdf('detail')" title="Rangliste + alle Einzelwürfe">📋 PDF Detailbericht</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ══════════ STANDINGS VIEW ══════════ -->
+<div id="standingsView" class="hidden">
+    <div class="sv-header">
+        <div><h1>🎳 Zwischenstand</h1><p id="svTeamName">Kegelstadtmeisterschaft</p></div>
+        <div class="sv-refresh"><div class="sv-pulse"></div><span id="svLastUpdate">Lade …</span></div>
     </div>
-  </div>
-  <div class="topbar-actions">
-    <button class="btn" onclick="switchClub()" style="font-size:11px;padding:5px 9px;">⇄ Club</button>
-    <button class="btn btn-danger" onclick="confirmReset()">Reset</button>
-  </div>
+    <div class="sv-body" id="svBody"></div>
 </div>
 
-<div id="presence-panel" class="presence-panel" style="display:none;">
-  <div class="presence-label">Anwesend — tippen zum An-/Abmelden</div>
-  <div class="presence-chips" id="presence-chips"></div>
-</div>
-
-<div class="spiele-page" id="spiele-content"></div>
+<div id="toast"></div>
 
 <script>
-const COLORS = ['#E8D5B7','#B7D5E8','#D5E8B7','#E8B7D5','#D5B7E8','#E8C8B7','#B7E8D5','#E8E8B7','#C8B7E8','#B7C8E8','#E8D5C8','#C8E8B7'];
-
-const CLUBS = {
-  bb: { id:'bb', name:'Blackout Boys', color:'#1a5c2a', members:['Jansen','Lehmann','Wübben','Dimi','Hannes','Heinrich','Jan','Lukas','Matze','Runde','Eiken','Thorben','Laurenz','Sebastian','Kossen'] },
-  hb: { id:'hb', name:'Harske Bössels', color:'#1a3575', members:['Nils','Jonas','Steffen','Marcel','Arling','Laui','Nico','Pinkernell','Wiktor','Henrik','Alex','Andre','Dennis','Arthur','Lukas','Simon','Tim'] },
-};
-
-let state = {
-  selectedClub: null,
-  spieler: [],
-  anwesend: [],
-  spiele: [
-    { id:'hohe-hausnummer', name:'Hohe Hausnummer', mode:'hoch', type:'hausnummer', loserCount:3, scores:{}, showResult:false, penaltiesApplied:false,
-      desc:'Jeder Spieler hat 3 Würfe. Nach jedem Wurf entscheidet der Kegler, ob die Punktzahl an die erste, mittlere oder letzte Stelle kommt — die gewählte Position darf danach nicht mehr geändert werden. Wenn alle geworfen haben auf „Auswerten" drücken. Die Spieler mit der <strong>niedrigsten Hausnummer</strong> verlieren.' },
-    { id:'tiefe-hausnummer', name:'Tiefe Hausnummer', mode:'tief', type:'hausnummer', loserCount:3, scores:{}, showResult:false, penaltiesApplied:false,
-      desc:'Gleiche Regeln wie Hohe Hausnummer — 3 Würfe, nach jedem Wurf wird die Stelle (vorne, mitte, hinten) festgelegt. Die gewählte Reihenfolge darf nicht geändert werden. Die Spieler mit der <strong>höchsten Hausnummer</strong> verlieren.' },
-  ],
-  tannenbaum: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], tree1:new Array(25).fill(false), tree2:new Array(25).fill(false) },
-  abräumen: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], teams:[{throws:0,first:false,done:false},{throws:0,first:false,done:false}] },
-  bis100: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], teams:[{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''},{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''}] },
-  blackjack: { open:false, loserCount:1, showResult:false, players:{} },
-  tagnacht: { open:false, loserCount:1, showResult:false, scores:{} },
-  bergtal: { open:false, loserCount:1, showResult:false, scores:{} },
-  madn: { open:false, order:[], scores:{}, currentTurn:0, winner:null, lastReset:[] },
-  vierGewinnt: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], currentTeam:0, board:Array.from({length:9},()=>new Array(9).fill(null)), winner:null, winCells:[], lastDrop:null },
-  busfahren: { open:false, phase:'order', playerOrder:[], assignments:{}, currentAssignIdx:0, buses:{}, currentThrowIdx:0, winner:null, log:[] },
-};
-
-function applyGamePenalty() { /* Keine Strafen — no-op */ }
-
-function initials(name) { return name.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2); }
-function avatarColor(name) { let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
-function esc(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-function esc2(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
-
-function toggleAnwesend(s) {
-  if (state.anwesend.includes(s)) {
-    state.anwesend = state.anwesend.filter(p => p !== s);
-    state.tannenbaum.team1 = state.tannenbaum.team1.filter(p => p !== s);
-    state.tannenbaum.team2 = state.tannenbaum.team2.filter(p => p !== s);
-    state.abräumen.team1 = state.abräumen.team1.filter(p => p !== s);
-    state.abräumen.team2 = state.abräumen.team2.filter(p => p !== s);
-    state.bis100.team1 = state.bis100.team1.filter(p => p !== s);
-    state.bis100.team2 = state.bis100.team2.filter(p => p !== s);
-    state.vierGewinnt.team1 = state.vierGewinnt.team1.filter(p => p !== s);
-    state.vierGewinnt.team2 = state.vierGewinnt.team2.filter(p => p !== s);
-  } else {
-    state.anwesend.push(s);
-  }
-  renderAll();
-}
-
-function renderPresence() {
-  const chips = document.getElementById('presence-chips');
-  if (!chips) return;
-  chips.innerHTML = state.spieler.map(s => {
-    const da = state.anwesend.includes(s);
-    return `<div class="presence-chip ${da?'da':'weg'}" onclick="toggleAnwesend('${esc(s)}')">
-      <div class="chip-avatar" style="background:${avatarColor(s)}">${initials(s)}</div>
-      ${s.trim()}
-    </div>`;
-  }).join('');
-}
-
-function renderAll() {
-  if (!state.selectedClub) return;
-  renderPresence();
-  renderSpiele();
-}
-
-// ── renderSpiele ──────────────────────────────────────────────
-function renderSpiele() {
-  const c = document.getElementById('spiele-content');
-  if (!c) return;
-  let html = '';
-  state.spiele.forEach((g, gi) => {
-    const modeLabel = g.mode === 'hoch' ? 'Niedrigste Zahl verliert' : 'Höchste Zahl verliert';
-    const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
-    const isHN = g.type === 'hausnummer';
-    const allFilled = aktiv.length > 0 && aktiv.every(s => {
-      if (isHN) { const sc = g.scores[s]||{}; return sc.h && sc.z && sc.e; }
-      return g.scores[s] !== undefined && g.scores[s] !== '';
-    });
-    html += `<div class="spiel-card">
-      <div class="spiel-header" onclick="toggleSpiel(${gi})">
-        <div><div class="spiel-title">${g.name}</div><div class="spiel-meta">${modeLabel} &nbsp;·&nbsp; ${g.loserCount} Verlierer</div></div>
-        <span class="spiel-chevron${g.open?' open':''}">&#8964;</span>
-      </div>
-      <div class="spiel-body${g.open?' open':''}">
-        ${g.desc ? `<div class="spiel-desc">${g.desc}</div>` : ''}
-        <div class="loser-count-row">
-          <span class="loser-count-label">Anzahl Verlierer</span>
-          <div class="stepper">
-            <button class="stepper-btn" onclick="changeLoser(${gi},-1)">−</button>
-            <span class="stepper-val">${g.loserCount}</span>
-            <button class="stepper-btn" onclick="changeLoser(${gi},1)">+</button>
-          </div>
-        </div>
-        ${isHN ? '<div class="hn-legend">Hundert &nbsp;·&nbsp; Zehn &nbsp;·&nbsp; Einer &nbsp;→&nbsp; z.B. 3 · 7 · 9 = <strong>379</strong></div>' : ''}
-        ${aktiv.map(s => {
-          if (isHN) {
-            const sc = g.scores[s]||{};
-            const num = (sc.h&&sc.z&&sc.e) ? `${sc.h}${sc.z}${sc.e}` : '';
-            return `<div class="score-row">
-              <div class="score-name"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div>${s.trim()}</div>
-              <div class="hn-inputs">
-                <input class="hn-digit" type="number" inputmode="numeric" min="1" max="9" placeholder="H" value="${sc.h||''}" oninput="setHNScore(${gi},'${esc(s)}','h',this.value)">
-                <span class="hn-sep">·</span>
-                <input class="hn-digit" type="number" inputmode="numeric" min="1" max="9" placeholder="Z" value="${sc.z||''}" oninput="setHNScore(${gi},'${esc(s)}','z',this.value)">
-                <span class="hn-sep">·</span>
-                <input class="hn-digit" type="number" inputmode="numeric" min="1" max="9" placeholder="E" value="${sc.e||''}" oninput="setHNScore(${gi},'${esc(s)}','e',this.value)">
-                <span class="hn-result">${num ? '= '+num : ''}</span>
-              </div>
-            </div>`;
-          }
-          const val = g.scores[s] !== undefined ? g.scores[s] : '';
-          return `<div class="score-row">
-            <div class="score-name"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div>${s.trim()}</div>
-            <input class="score-input" type="number" inputmode="numeric" id="sc-${gi}-${esc2(s)}" value="${val}" placeholder="–" onchange="setScore(${gi},'${esc(s)}',this.value)" oninput="setScore(${gi},'${esc(s)}',this.value)">
-          </div>`;
-        }).join('')}
-        <div class="spiel-actions">
-          <button class="btn btn-danger" onclick="resetSpiel(${gi})">Zurücksetzen</button>
-          <button class="btn btn-primary" onclick="auswerten(${gi})" ${!allFilled?'style="opacity:0.5;"':''}>Auswerten</button>
-        </div>
-        ${g.showResult ? renderResult(g) : ''}
-      </div>
-    </div>`;
-  });
-  html += renderTannenbaumCard();
-  html += renderAbraeumenCard();
-  html += renderBis100Card();
-  html += renderBlackjackCard();
-  html += renderTagNachtCard();
-  html += renderBergTalCard();
-  html += renderMadnCard();
-  html += renderVierGewinntCard();
-  html += renderBusfahrenCard();
-  c.innerHTML = html;
-}
-
-function getSpielScore(g, s) {
-  if (g.type === 'hausnummer') {
-    const sc = g.scores[s]||{};
-    if (!sc.h||!sc.z||!sc.e) return null;
-    return parseInt(`${sc.h}${sc.z}${sc.e}`);
-  }
-  const v = parseFloat(g.scores[s]);
-  return isNaN(v) ? null : v;
-}
-function renderResult(g) {
-  const ranked = state.spieler.filter(s=>state.anwesend.includes(s)&&getSpielScore(g,s)!==null)
-    .map(s=>({name:s,score:getSpielScore(g,s)}))
-    .sort((a,b)=>g.mode==='tief'?a.score-b.score:b.score-a.score);
-  const n = Math.min(g.loserCount, ranked.length);
-  let html = '<div class="result-list">';
-  ranked.forEach((p,i) => {
-    const isLoser = i >= ranked.length-n, isTop = i===0;
-    html += `<div class="result-row${isLoser?' loser':isTop?' top':''}">
-      <span class="result-rank">${i+1}.</span>
-      <span class="result-name">${p.name.trim()}</span>
-      ${isLoser?'<span class="loser-badge">Verlierer</span>':isTop?'<span class="winner-tag">1. Platz</span>':''}
-      <span class="result-score">${p.score}</span>
-    </div>`;
-  });
-  return html + '</div>';
-}
-function toggleSpiel(gi) { state.spiele[gi].open=!state.spiele[gi].open; renderSpiele(); }
-function changeLoser(gi,d) { state.spiele[gi].loserCount=Math.max(1,state.spiele[gi].loserCount+d); renderSpiele(); }
-function setHNScore(gi,s,pos,val) {
-  const v=parseInt(val);
-  if (!state.spiele[gi].scores[s]) state.spiele[gi].scores[s]={};
-  state.spiele[gi].scores[s][pos]=(val===''||isNaN(v))?'':Math.min(9,Math.max(1,v));
-  state.spiele[gi].showResult=false; renderSpiele();
-}
-function setScore(gi,s,val) { state.spiele[gi].scores[s]=val; state.spiele[gi].showResult=false; }
-function auswerten(gi) { state.spiele[gi].showResult=true; renderSpiele(); }
-function resetSpiel(gi) { state.spiele[gi].scores={}; state.spiele[gi].showResult=false; renderSpiele(); }
-
-// ── Tannenbaum ────────────────────────────────────────────────
-const TREE_ROWS = [[9],[8,8],[7,7,7],[6,6,6,6],[5,5,5,5,5],[4,4,4,4],[3,3,3],[2,2],[1]];
-const TREE_ROW_START = [0,1,3,6,10,15,19,22,24];
-
-function renderTannenbaumCard() {
-  const tb = state.tannenbaum;
-  const n1=tb.teamName1||'Team 1', n2=tb.teamName2||'Team 2';
-  const assigned1=tb.team1.length, assigned2=tb.team2.length;
-  const metaLabel=(assigned1+assigned2>0)?`${n1}: ${assigned1} · ${n2}: ${assigned2} Spieler`:'Spieler noch nicht eingeteilt';
-  const done1=tb.tree1.filter(Boolean).length, done2=tb.tree2.filter(Boolean).length;
-  const allDone1=done1===25, allDone2=done2===25;
-
-  let html = `<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleTanne()">
-      <div><div class="spiel-title">Tannenbaum</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${tb.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${tb.open?' open':''}">
-    <div class="spiel-desc">Teilt die Spieler auf 2 Teams auf oder drückt auf „Zufällig aufteilen". Der erste Spieler von Team 1 wirft und tippt auf die Zahl, die er geworfen hat. Dann ist der erste Spieler von Team 2 dran. Sollten alle Zahlen einer Gruppe bereits weggestrichen sein, tippt ihr die Zahl beim gegnerischen Team an. Ziel: den eigenen Tannenbaum <strong>zuerst vollständig abräumen</strong>.</div>
-    <div class="team-names-row">
-      <div class="team-name-field">
-        <span class="team-name-label t1">Teamname 1</span>
-        <input class="team-name-input t1" type="text" maxlength="20" value="${esc(n1)}" oninput="state.tannenbaum.teamName1=this.value;renderSpiele()" placeholder="Team 1">
-      </div>
-      <div class="team-name-field">
-        <span class="team-name-label t2">Teamname 2</span>
-        <input class="team-name-input t2" type="text" maxlength="20" value="${esc(n2)}" oninput="state.tannenbaum.teamName2=this.value;renderSpiele()" placeholder="Team 2">
-      </div>
-    </div>
-    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">MANNSCHAFTEN — tippen zum Wechseln</div>
-    <div class="tanne-teams">
-      <div class="tanne-team-col">
-        <div class="tanne-team-label tanne-team1-label">${n1}</div>
-        ${tb.team1.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team1" onclick="tanneAssign('${esc(s)}',2)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
-      </div>
-      <div class="tanne-team-col">
-        <div class="tanne-team-label tanne-team2-label">${n2}</div>
-        ${tb.team2.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team2" onclick="tanneAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
-      </div>
-    </div>`;
-
-  const unassigned=state.spieler.filter(s=>state.anwesend.includes(s)&&!tb.team1.includes(s)&&!tb.team2.includes(s));
-  if (unassigned.length) {
-    html += `<div style="font-size:12px;font-weight:600;color:#888;margin-bottom:6px;">NICHT ZUGETEILT</div><div class="tanne-players-row">`;
-    html += unassigned.map(s=>`<div class="tanne-player-chip chip-unassigned" onclick="tanneAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()} <span style="font-size:10px;color:#1a6bc0;">→ T1</span></div>`).join('');
-    html += `</div>`;
-  }
-
-  html += `<div class="tanne-trees">
-    <div class="tanne-tree-wrap">
-      <div class="tanne-tree-title t1">${n1}</div>
-      ${renderTree(tb.tree1,'t1',1)}
-      <div class="tanne-progress">${done1} / 25</div>
-    </div>
-    <div class="tanne-tree-wrap">
-      <div class="tanne-tree-title t2">${n2}</div>
-      ${renderTree(tb.tree2,'t2',2)}
-      <div class="tanne-progress">${done2} / 25</div>
-    </div>
-  </div>`;
-
-  if (allDone1||allDone2) {
-    html += `<div class="tanne-winner-banner">${allDone1&&allDone2?'Unentschieden!':(allDone1?n1:n2)+' gewinnt!'}</div>`;
-  }
-  html += `<div style="display:flex;gap:8px;margin-top:14px;">
-    <button class="btn btn-danger" onclick="resetTanne()" style="flex:1;">Zurücksetzen</button>
-    <button class="btn" onclick="autoSplitTeams()" style="flex:1;">Zufällig aufteilen</button>
-  </div></div></div>`;
-  return html;
-}
-
-function renderTree(cells, teamClass, teamNum) {
-  let html='';
-  TREE_ROWS.forEach((row,ri)=>{
-    html+=`<div class="tanne-row">`;
-    row.forEach((val,ci)=>{
-      const idx=TREE_ROW_START[ri]+ci, done=cells[idx];
-      html+=`<div class="tanne-cell ${teamClass}-${done?'done':'active'}" onclick="tanneCell(${teamNum},${idx})">${val}</div>`;
-    });
-    html+=`</div>`;
-  });
-  return html;
-}
-
-function toggleTanne() { state.tannenbaum.open=!state.tannenbaum.open; renderSpiele(); }
-function tanneAssign(s,toTeam) {
-  const tb=state.tannenbaum;
-  tb.team1=tb.team1.filter(p=>p!==s); tb.team2=tb.team2.filter(p=>p!==s);
-  if(toTeam===1) tb.team1.push(s); else tb.team2.push(s); renderSpiele();
-}
-function tanneCell(teamNum,idx) {
-  const tb=state.tannenbaum;
-  const cells=teamNum===1?tb.tree1:tb.tree2;
-  cells[idx]=!cells[idx];
-  if(navigator.vibrate) navigator.vibrate(15);
-  renderSpiele();
-}
-function resetTanne() {
-  state.tannenbaum.tree1=new Array(25).fill(false);
-  state.tannenbaum.tree2=new Array(25).fill(false);
-  renderSpiele();
-}
-function autoSplitTeams() {
-  const shuffled=[...state.spieler].sort(()=>Math.random()-0.5);
-  const half=Math.ceil(shuffled.length/2);
-  state.tannenbaum.team1=shuffled.slice(0,half);
-  state.tannenbaum.team2=shuffled.slice(half);
-  renderSpiele();
-}
-
-// ── 2x Abräumen ──────────────────────────────────────────────
-function renderAbraeumenCard() {
-  const ab=state.abräumen;
-  const t1=ab.teams[0], t2=ab.teams[1];
-  const bothDone=t1.done&&t2.done, anyDone=t1.done||t2.done;
-  const an1=ab.teamName1||'Team 1', an2=ab.teamName2||'Team 2';
-  let metaLabel=ab.team1.length||ab.team2.length?`${an1}: ${ab.team1.length} · ${an2}: ${ab.team2.length} Spieler`:'Spieler noch nicht eingeteilt';
-
-  let html=`<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleAbr()">
-      <div><div class="spiel-title">2x Abräumen</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${ab.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${ab.open?' open':''}">
-    <div class="spiel-desc">Stellt die Kegelbahn auf „Abräumen".<br><br>Teilt die zwei Mannschaften ein und vergebt einen Namen oder klickt auf „Zufällig aufteilen".<br><br>${an1} fängt an und wirft so oft, bis sie das Bild abgeräumt haben. Pro Wurf erhöht ihr die Zahl um einen Punkt. Nachdem ihr das erste Mal abgeräumt habt, klickt ihr auf <strong>„1x abgeräumt"</strong>. Nachdem ihr das zweite Mal abgeräumt habt, klickt ihr auf <strong>„2x abgeräumt"</strong>.<br><br>Nun spielt ${an2} mit identischen Regeln. Das Team mit weniger Würfen gewinnt.</div>
-    <div class="team-names-row">
-      <div class="team-name-field"><span class="team-name-label t1">Teamname 1</span><input class="team-name-input t1" type="text" maxlength="20" value="${esc(an1)}" oninput="state.abräumen.teamName1=this.value;renderSpiele()" placeholder="Team 1"></div>
-      <div class="team-name-field"><span class="team-name-label t2">Teamname 2</span><input class="team-name-input t2" type="text" maxlength="20" value="${esc(an2)}" oninput="state.abräumen.teamName2=this.value;renderSpiele()" placeholder="Team 2"></div>
-    </div>
-    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">MANNSCHAFTEN — tippen zum Wechseln</div>
-    <div class="tanne-teams">
-      <div class="tanne-team-col">
-        <div class="tanne-team-label tanne-team1-label">${an1}</div>
-        ${ab.team1.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team1" onclick="abrAssign('${esc(s)}',2)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
-      </div>
-      <div class="tanne-team-col">
-        <div class="tanne-team-label tanne-team2-label">${an2}</div>
-        ${ab.team2.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team2" onclick="abrAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
-      </div>
-    </div>`;
-
-  const unassigned=state.spieler.filter(s=>state.anwesend.includes(s)&&!ab.team1.includes(s)&&!ab.team2.includes(s));
-  if(unassigned.length) html+=`<div style="font-size:12px;font-weight:600;color:#888;margin:8px 0 6px;">NICHT ZUGETEILT</div><div class="tanne-players-row">${unassigned.map(s=>`<div class="tanne-player-chip chip-unassigned" onclick="abrAssign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()} <span style="font-size:10px;color:#1a6bc0;">→ ${an1}</span></div>`).join('')}</div>`;
-
-  html+=`<div class="abr-teams">`;
-  [0,1].forEach(i=>{
-    const t=ab.teams[i], cls=i===0?'t1':'t2', label=i===0?an1:an2;
-    html+=`<div class="abr-team-box ${cls}${t.done?' done-box':''}">
-      <div class="abr-team-name">${label}</div>
-      <div class="abr-throws">
-        <button class="abr-btn-throw minus" onclick="abrThrow(${i},-1)">−</button>
-        <div><div class="abr-throw-num">${t.throws}</div><div class="abr-throw-label">Würfe</div></div>
-        <button class="abr-btn-throw" onclick="abrThrow(${i},1)">+</button>
-      </div>
-      <div class="abr-milestone-btns">
-        <button class="abr-milestone ${t.first?'first-done':'first-inactive'}" onclick="abrMilestone(${i},'first')">${t.first?'1x abgeräumt ✓':'1x abgeräumt'}</button>
-        <button class="abr-milestone ${t.done?'second-done':'second-inactive'}" onclick="abrMilestone(${i},'done')" ${!t.first&&!t.done?'style="opacity:0.5;"':''}>${t.done?'2x abgeräumt ✓':'2x abgeräumt'}</button>
-      </div>
-    </div>`;
-  });
-  html+=`</div>`;
-
-  if(anyDone) {
-    let winText='';
-    if(bothDone) { winText=t1.throws===t2.throws?'Unentschieden!':(t1.throws<t2.throws?an1:an2)+' gewinnt mit weniger Würfen!'; }
-    else { winText=(t1.done?an1:an2)+' hat zuerst 2x abgeräumt!'; }
-    html+=`<div class="abr-winner-banner">${winText}</div>`;
-  }
-
-  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
-    <button class="btn btn-danger" onclick="resetAbr()" style="flex:1;">Zurücksetzen</button>
-    <button class="btn" onclick="autoSplitAbr()" style="flex:1;">Zufällig aufteilen</button>
-  </div></div></div>`;
-  return html;
-}
-
-function toggleAbr() { state.abräumen.open=!state.abräumen.open; renderSpiele(); }
-function abrAssign(s,toTeam) {
-  const ab=state.abräumen;
-  ab.team1=ab.team1.filter(p=>p!==s); ab.team2=ab.team2.filter(p=>p!==s);
-  if(toTeam===1) ab.team1.push(s); else ab.team2.push(s); renderSpiele();
-}
-function abrThrow(i,d) {
-  state.abräumen.teams[i].throws=Math.max(0,state.abräumen.teams[i].throws+d);
-  if(navigator.vibrate) navigator.vibrate(15); renderSpiele();
-}
-function abrMilestone(i,which) {
-  const t=state.abräumen.teams[i];
-  if(which==='first') { t.first=!t.first; if(!t.first) t.done=false; }
-  else { if(!t.first) return; t.done=!t.done; }
-  renderSpiele();
-}
-function resetAbr() {
-  state.abräumen.teams=[{throws:0,first:false,done:false},{throws:0,first:false,done:false}];
-  renderSpiele();
-}
-function autoSplitAbr() {
-  const shuffled=[...state.spieler].sort(()=>Math.random()-0.5);
-  const half=Math.ceil(shuffled.length/2);
-  state.abräumen.team1=shuffled.slice(0,half);
-  state.abräumen.team2=shuffled.slice(half);
-  renderSpiele();
-}
-
-// ── Bis 100 ───────────────────────────────────────────────────
-const SCHNAPSZAHLEN = new Set([11,22,33,44,55,66,77,88,99]);
-
-function renderBis100Card() {
-  const b=state.bis100;
-  const t1=b.teams[0], t2=b.teams[1], anyWon=t1.won||t2.won;
-  const bn1=b.teamName1||'Team 1', bn2=b.teamName2||'Team 2';
-  let metaLabel=b.team1.length||b.team2.length?`${bn1}: ${b.team1.length} · ${bn2}: ${b.team2.length} Spieler`:'Spieler noch nicht eingeteilt';
-
-  let html=`<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleBis100()">
-      <div><div class="spiel-title">Bis 100</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${b.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${b.open?' open':''}">
-    <div class="spiel-desc">Ihr teilt euch auf 2 Teams auf oder klickt auf „Zufällig aufteilen".<br><br>${bn1} startet und wirft. Wählt die Zahl, die ihr geworfen habt, und erhöht damit euren Punktestand.<br><br>Solltet ihr mit eurem Wurf eine <strong>Schnapszahl</strong> treffen, wird der Punktestand auf <strong>0 zurückgesetzt</strong>. Eine <strong>Pumpe zählt 0</strong>.<br><br>Das Team, welches zuerst <strong>100 Punkte</strong> erreicht, gewinnt das Spiel.</div>
-    <div class="team-names-row">
-      <div class="team-name-field"><span class="team-name-label t1">Teamname 1</span><input class="team-name-input t1" type="text" maxlength="20" value="${esc(bn1)}" oninput="state.bis100.teamName1=this.value;renderSpiele()" placeholder="Team 1"></div>
-      <div class="team-name-field"><span class="team-name-label t2">Teamname 2</span><input class="team-name-input t2" type="text" maxlength="20" value="${esc(bn2)}" oninput="state.bis100.teamName2=this.value;renderSpiele()" placeholder="Team 2"></div>
-    </div>
-    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">MANNSCHAFTEN — tippen zum Wechseln</div>
-    <div class="tanne-teams">
-      <div class="tanne-team-col">
-        <div class="tanne-team-label tanne-team1-label">${bn1}</div>
-        ${b.team1.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team1" onclick="b100Assign('${esc(s)}',2)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
-      </div>
-      <div class="tanne-team-col">
-        <div class="tanne-team-label tanne-team2-label">${bn2}</div>
-        ${b.team2.filter(s=>state.anwesend.includes(s)).map(s=>`<div class="tanne-player-chip chip-team2" onclick="b100Assign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()}</div>`).join('')||'<span style="font-size:12px;color:#bbb;">–</span>'}
-      </div>
-    </div>`;
-
-  const unassigned=state.spieler.filter(s=>state.anwesend.includes(s)&&!b.team1.includes(s)&&!b.team2.includes(s));
-  if(unassigned.length) html+=`<div style="font-size:12px;font-weight:600;color:#888;margin:8px 0 6px;">NICHT ZUGETEILT</div><div class="tanne-players-row">${unassigned.map(s=>`<div class="tanne-player-chip chip-unassigned" onclick="b100Assign('${esc(s)}',1)"><div class="avatar" style="background:${avatarColor(s)};width:20px;height:20px;font-size:9px;">${initials(s)}</div>${s.trim()} <span style="font-size:10px;color:#1a6bc0;">→ ${bn1}</span></div>`).join('')}</div>`;
-
-  html+=`<div class="b100-teams">`;
-  [0,1].forEach(i=>{
-    const t=b.teams[i], cls=i===0?'t1':'t2', label=i===0?bn1:bn2;
-    const flashCls=t.flashMsg?' flash-reset':'', wonCls=t.won?' won':'', dis=t.won?' disabled':'';
-    html+=`<div class="b100-team-box ${cls}${flashCls}${wonCls}">
-      <div class="b100-team-name">${label}</div>
-      <div class="b100-score">${t.won?'100+':t.score}</div>
-      <div class="b100-score-label">${t.won?'Fertig!':'Punkte'}</div>
-      <div class="b100-stats">
-        <div class="b100-stat"><div class="b100-stat-num">${t.throwsSinceReset}</div><div class="b100-stat-label">seit letztem Reset</div></div>
-        <div class="b100-stat"><div class="b100-stat-num">${t.totalThrows}</div><div class="b100-stat-label">gesamt</div></div>
-      </div>
-      <div class="b100-reset-msg">${t.flashMsg||''}</div>
-      <div class="b100-numpad">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="b100-num-btn${dis}" onclick="b100Add(${i},${n})">${n}</button>`).join('')}</div>
-    </div>`;
-  });
-  html+=`</div>`;
-
-  if(anyWon) {
-    let winText='';
-    if(t1.won&&t2.won) { winText=t1.totalThrows===t2.totalThrows?'Unentschieden!':(t1.totalThrows<t2.totalThrows?bn1:bn2)+' gewinnt mit weniger Würfen!'; }
-    else { winText=(t1.won?bn1:bn2)+' hat 100 erreicht!'; }
-    html+=`<div class="b100-winner-banner">${winText}</div>`;
-  }
-
-  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
-    <button class="btn btn-danger" onclick="resetBis100()" style="flex:1;">Zurücksetzen</button>
-    <button class="btn" onclick="autoSplitBis100()" style="flex:1;">Zufällig aufteilen</button>
-  </div></div></div>`;
-  return html;
-}
-
-function toggleBis100() { state.bis100.open=!state.bis100.open; renderSpiele(); }
-function b100Assign(s,toTeam) {
-  const b=state.bis100;
-  b.team1=b.team1.filter(p=>p!==s); b.team2=b.team2.filter(p=>p!==s);
-  if(toTeam===1) b.team1.push(s); else b.team2.push(s); renderSpiele();
-}
-function b100Add(i,n) {
-  const t=state.bis100.teams[i];
-  if(t.won) return;
-  const newScore=t.score+n;
-  t.totalThrows++; t.throwsSinceReset++;
-  if(SCHNAPSZAHLEN.has(newScore)) {
-    t.score=0; t.throwsSinceReset=0;
-    t.flashMsg=`${newScore} — Schnapszahl! Zurück auf 0`;
-    if(navigator.vibrate) navigator.vibrate([80,60,80]);
-    renderSpiele();
-    setTimeout(()=>{ t.flashMsg=''; renderSpiele(); },2000);
-  } else if(newScore>=100) {
-    t.score=newScore; t.won=true; t.flashMsg='';
-    if(navigator.vibrate) navigator.vibrate([50,30,50,30,100]);
-    renderSpiele();
-  } else {
-    t.score=newScore; t.flashMsg='';
-    if(navigator.vibrate) navigator.vibrate(15);
-    renderSpiele();
-  }
-}
-function resetBis100() {
-  state.bis100.teams=[{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''},{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''}];
-  renderSpiele();
-}
-function autoSplitBis100() {
-  const shuffled=[...state.spieler].sort(()=>Math.random()-0.5);
-  const half=Math.ceil(shuffled.length/2);
-  state.bis100.team1=shuffled.slice(0,half);
-  state.bis100.team2=shuffled.slice(half);
-  renderSpiele();
-}
-
-// ── Blackjack ─────────────────────────────────────────────────
-const BJ_CARDS=[
-  {id:'7',label:'7',sub:'',val:7,isAss:false},{id:'8',label:'8',sub:'',val:8,isAss:false},
-  {id:'9',label:'9',sub:'',val:9,isAss:false},{id:'10',label:'10',sub:'',val:10,isAss:false},
-  {id:'bube',label:'B',sub:'= 2',val:2,isAss:false},{id:'dame',label:'D',sub:'= 3',val:3,isAss:false},
-  {id:'koenig',label:'K',sub:'= 4',val:4,isAss:false},{id:'ass',label:'A',sub:'1 / 11',val:0,isAss:true},
+// ══════════════════════════════════════════════════════
+//  SCHRÄGE 3 – Pin-Muster (Index 0–8)
+//       0
+//      1 2
+//     3 4 5
+//      6 7
+//       8
+// ══════════════════════════════════════════════════════
+const S3_PATTERNS = [
+    [false,false,false, true,false,false,  true,false, true],  // Bild 1 – 8,6,3
+    [ true, true,false,  true,false,false,false,false,false],  // Bild 2 – 3,1,0
+    [ true,false, true,false,false, true,false,false,false],   // Bild 3 – 0,2,5
+    [false,false,false,false,false, true,false, true, true],   // Bild 4 – 5,7,8
+    [ true,false,false,false, true,false,false,false, true],   // Bild 5 – 0,4,8
 ];
-function bjInitPlayer(s) {
-  if(!state.blackjack.players[s]) state.blackjack.players[s]={cardId:null,cardVal:0,throws:[],throwsTotal:0,total:0,done:false,revealed:false,busted:false,won:false,assChoice:null,assChoosing:false};
+const S3_LABELS = ['Bild 1','Bild 2','Bild 3','Bild 4','Bild 5'];
+
+// ══════════════════════════════════════════════════════
+//  FREDENBAUM – Multiplier & Pin-Muster
+//
+//  ⚠️ Muster aus dem Bild abgelesen – bitte prüfen!
+//  Format wie bei Schräge 3: "Wurf X ist 012..."
+// ══════════════════════════════════════════════════════
+const FB_MULT = [1, 2, 3, 4, 5, 5, 6, 6, 7, 8];
+
+const FB_PATTERNS = [
+    // Wurf  1 ×1 – Alle 9
+    [ true, true, true,  true, true, true,  true, true, true],
+    // Wurf  2 ×2 – Alle außer 8
+    [ true, true, true,  true, true, true,  true, true,false],
+    // Wurf  3 ×3 – 3,5,6,7,8
+    [false,false,false,  true,false, true,  true, true, true],
+    // Wurf  4 ×4 – 0,1,2,3,5
+    [ true, true, true,  true,false, true, false,false,false],
+    // Wurf  5 ×5 – 3,6
+    [false,false,false,  true,false,false,  true,false,false],
+    // Wurf  6 ×5 – 5,7
+    [false,false,false, false,false, true, false, true,false],
+    // Wurf  7 ×6 – 1,3
+    [false, true,false,  true,false,false, false,false,false],
+    // Wurf  8 ×6 – 2,5
+    [false,false, true, false,false, true, false,false,false],
+    // Wurf  9 ×7 – 3
+    [false,false,false,  true,false,false, false,false,false],
+    // Wurf 10 ×8 – 5
+    [false,false,false, false,false, true, false,false,false],
+];
+
+// Pin SVG geometry
+const PIN_C = [2,1,3,0,2,4,1,3,2]; // col
+const PIN_R = [0,1,1,2,2,2,3,3,4]; // row
+const U = 17; // px per unit (5*17 = 85px grid)
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let S = {
+    teamName   : '',
+    players    : [],   // { id, name, isAufschreiber, isDamen }
+    nextId     : 1,
+    scores     : { g1:{}, g2:{}, s3:{}, fb:{} },
+    activeTab  : 'mannschaft',
+    s3PicIdx   : 0,
+    fbThrowIdx : 0,
+};
+
+// ══════════════════════════════════════════════════════
+//  PRESET TEAMS
+// ══════════════════════════════════════════════════════
+const PRESET_TEAMS = {
+    blackout: {
+        name: 'Blackout Boys',
+        players: ['Christian Jansen','Christian Wübben','Christian Lehmann','Sebastian Jansen',
+                  'Laurenz Held','Thorben Kloppe','Hannes Kötter','Heinrich von Lintel',
+                  'Jan-Henning Brunsen','Lucas Kossen','Lukas Cordes','Matthias Robin',
+                  'Michael Runde','Dimi Renje','Sebastian Eiken']
+    },
+    harske: {
+        name: 'Harske Bössels',
+        players: ['Nils','Jonas','Steffen','Marcel','Arling','Laui','Nico',
+                  'Pinkernell','Wiktor','Henrik','Alex','Andre','Dennis','Arthur',
+                  'Lukas','Simon','Tim']
+    }
+};
+
+let currentTeam = 'custom'; // 'blackout' | 'harske' | 'custom'
+function smKey() { return currentTeam==='custom'?'kegel_v4':'kegel_v4_'+currentTeam; }
+
+function save() { try { localStorage.setItem(smKey(), JSON.stringify(S)); } catch(e) {} }
+function load() { try { const d=localStorage.getItem(smKey()); if(d) S={...S,...JSON.parse(d)}; } catch(e) {} }
+
+// ══════════════════════════════════════════════════════
+//  TEAM + MODE SELECT
+// ══════════════════════════════════════════════════════
+function selectTeam(teamKey) {
+    currentTeam = teamKey;
+    localStorage.setItem('kegel_team', teamKey);
+    localStorage.removeItem('kegel_mode');
+    const label = teamKey==='custom' ? 'Neues Team – was möchtest du machen?' :
+                  'Team: ' + PRESET_TEAMS[teamKey].name + ' – was möchtest du machen?';
+    document.getElementById('modeSelectTeamLabel').textContent = label;
+    document.getElementById('teamSelectScreen').classList.add('hidden');
+    document.getElementById('modeSelectScreen').classList.remove('hidden');
 }
-function renderBlackjackCard() {
-  const bj=state.blackjack;
-  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
-  aktiv.forEach(s=>bjInitPlayer(s));
-  const revCnt=aktiv.filter(s=>bj.players[s]?.revealed).length;
-  const bustCnt=aktiv.filter(s=>bj.players[s]?.busted).length;
-  const winCnt=aktiv.filter(s=>bj.players[s]?.won).length;
-  const metaLabel=revCnt>0?`${revCnt}/${aktiv.length} aufgedeckt · ${bustCnt} überworfen · ${winCnt}× 21`:`${aktiv.length} Spieler — Karte wählen, werfen, aufdecken`;
 
-  let html=`<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleBlackjack()">
-      <div><div class="spiel-title">Blackjack</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${bj.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${bj.open?' open':''}">
-    <div class="spiel-desc">Ein Einzelspiel. Jeder Spieler zieht eine Spielkarte. Bube = 2, Dame = 3, König = 4. Ein <strong>Ass zählt 1 oder 11</strong> — ihr entscheidet beim Aufdecken.<br><br>Der erste Spieler kommt zum Tablet und tippt seine Karte an. Die Karte bleibt <strong>verdeckt</strong>. Dann kegelt ihr so viele Würfe wie ihr wollt und tragt die Zahlen ein. Wenn ihr genug habt, klickt auf <strong>„Stehen"</strong>.<br><br>Ihr könnt mit dem Aufdecken bis zum Schluss warten — das erhöht die Spannung! Wer nach dem Aufdecken <strong>über 21</strong> ist, hat automatisch verloren. Wer <strong>genau 21</strong> hat, hat automatisch gewonnen.<br><br>Über den Button unten legt ihr fest, wie viele der verbleibenden Spieler (ohne Überworfene) noch verlieren.</div>
-    <div class="loser-count-row">
-      <span class="loser-count-label">Verlierer (außer Überworfene)</span>
-      <div class="stepper">
-        <button class="stepper-btn" onclick="bjChangeLoser(-1)">−</button>
-        <span class="stepper-val">${bj.loserCount}</span>
-        <button class="stepper-btn" onclick="bjChangeLoser(1)">+</button>
-      </div>
-    </div>`;
+function selectMode(mode) {
+    localStorage.setItem('kegel_mode', mode);
+    showMode(mode);
+}
 
-  aktiv.forEach(s=>{
-    const p=bj.players[s];
-    const cardSelected=p.cardId!==null;
-    const isActive=cardSelected&&!p.done&&!p.revealed&&!p.busted&&!p.won;
-    let statusHtml='',totalClass='';
-    if(p.busted){statusHtml=`<span class="bj-status bust">ÜBER!</span>`;totalClass=' bust';}
-    else if(p.won){statusHtml=`<span class="bj-status win21">21! ♠</span>`;totalClass=' win';}
-    else if(p.revealed){statusHtml=`<span class="bj-status done-st">Steht</span>`;}
-    else if(p.done){statusHtml=`<span class="bj-status done-st">Fertig</span>`;}
-    else if(cardSelected){statusHtml=`<span class="bj-status playing">Spielt</span>`;}
-    const displayVal=!cardSelected?'–':(p.revealed||p.busted||p.won)?p.total:p.throwsTotal>0?`${p.throwsTotal}`:'?';
-    let histParts=[];
-    if(p.revealed&&cardSelected){const c=BJ_CARDS.find(c=>c.id===p.cardId);p.throws.forEach(t=>histParts.push(String(t)));const cv=c?.isAss?p.assChoice:p.cardVal;histParts.push(c?`${c.label}(${cv})`:'')}
-    else if(cardSelected&&p.throws.length>0){p.throws.forEach(t=>histParts.push(String(t)));histParts.push(p.cardId==='ass'?'A(?)':'?');}
-    const histStr=histParts.length>1?histParts.join(' + ')+(p.revealed?` = ${p.total}`:''):'';
+function showMode(mode) {
+    ['teamSelectScreen','modeSelectScreen','appMain'].forEach(id=>
+        document.getElementById(id).classList.add('hidden'));
 
-    html+=`<div class="bj-player-section">
-      <div class="bj-player-header">
-        <div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div>
-        <span class="bj-player-name">${s.trim()}</span>
-        <span class="bj-total${totalClass}">${displayVal}</span>
-        ${statusHtml}
-      </div>`;
-
-    if(!cardSelected){
-      html+=`<div class="bj-card-picker">`;
-      BJ_CARDS.forEach(card=>{html+=`<button class="bj-card-btn" onclick="bjPickCard('${esc(s)}','${card.id}')">${card.label}<span class="bj-card-sub">${card.sub||card.val}</span></button>`;});
-      html+=`</div>`;
-    } else if(p.revealed||p.busted||p.won){
-      const c=BJ_CARDS.find(c=>c.id===p.cardId);
-      const vl=c?.isAss?`A = ${p.assChoice}`:`${c?.label} = ${p.cardVal}`;
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0 2px;"><span style="font-size:22px;">🂠</span><span style="font-size:13px;font-weight:600;color:#555;">${vl}</span></div>`;
+    if (mode === 'normal') {
+        // Redirect to spiele.html with the current team pre-selected
+        const clubParam = currentTeam==='blackout' ? 'bb' : currentTeam==='harske' ? 'hb' : 'custom';
+        window.location.href = 'spiele.html?club=' + clubParam;
+        return;
     } else {
-      const canChange=p.throws.length===0&&!p.done;
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:4px 0 6px;"><span style="font-size:28px;line-height:1;">🂠</span><span style="font-size:13px;color:#888;">Karte liegt verdeckt</span>${canChange?`<button class="btn" style="font-size:11px;padding:4px 10px;margin-left:auto;" onclick="bjClearCard('${esc(s)}')">Ändern</button>`:''}</div>`;
+        S = { teamName:'', players:[], nextId:1, scores:{g1:{},g2:{},s3:{},fb:{}}, activeTab:'mannschaft', s3PicIdx:0, fbThrowIdx:0 };
+        load();
+        if (!S.players.length && currentTeam !== 'custom') {
+            const preset = PRESET_TEAMS[currentTeam];
+            S.teamName = preset.name;
+            preset.players.forEach(name => {
+                const id = S.nextId++;
+                S.players.push({ id, name, isAufschreiber:false, isDamen:false });
+                S.scores.g1[id]=[null,null,null,null,null];
+                S.scores.g2[id]=[null,null,null,null,null];
+                S.scores.s3[id]=[[],[],[],[],[]];
+                S.scores.fb[id]=Array(10).fill(null).map(()=>[]);
+            });
+            save();
+        }
+        document.getElementById('appMain').classList.remove('hidden');
+        document.getElementById('teamNameInput').value = S.teamName || '';
+        document.getElementById('teamLabel').textContent = S.teamName || 'Mannschaft erfassen';
+        renderPlayers();
+        const startTab = S.activeTab==='zwischen' ? 'ergebnis' : (S.activeTab || 'mannschaft');
+        switchTab(startTab, true);
     }
+}
 
-    if(isActive){
-      html+=`<div class="bj-numpad">${Array.from({length:10},(_,i)=>`<button class="bj-num-btn" onclick="bjThrow('${esc(s)}',${i+1})">${i+1}</button>`).join('')}</div>`;
-      html+=`<button class="btn" style="width:100%;margin-top:4px;height:42px;font-weight:600;" onclick="bjStehen('${esc(s)}')">Stehen (Würfe: ${p.throwsTotal})</button>`;
+function backToModeSelect() {
+    localStorage.removeItem('kegel_mode');
+    ['appMain','standingsView'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    const label = currentTeam==='custom' ? 'Neues Team – was möchtest du machen?' :
+                  'Team: ' + PRESET_TEAMS[currentTeam].name + ' – was möchtest du machen?';
+    document.getElementById('modeSelectTeamLabel').textContent = label;
+    document.getElementById('modeSelectScreen').classList.remove('hidden');
+}
+
+function backToTeamSelect() {
+    localStorage.removeItem('kegel_mode');
+    localStorage.removeItem('kegel_team');
+    ['modeSelectScreen','appMain'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('teamSelectScreen').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════════════════
+//  BOOTSTRAP
+// ══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+    if (window.location.hash === '#standings') {
+        const t = localStorage.getItem('kegel_team') || 'custom';
+        currentTeam = t;
+        load();
+        document.getElementById('standingsView').classList.remove('hidden');
+        renderSV();
+        setInterval(() => { load(); renderSV(); }, 3000);
+        return;
     }
-
-    if((p.done||p.throws.length>0)&&cardSelected&&!p.revealed&&!p.busted&&!p.won){
-      if(p.cardId==='ass'&&p.assChoosing){
-        html+=`<div style="margin-top:8px;"><div style="font-size:12px;font-weight:600;color:#888;text-align:center;margin-bottom:6px;">Welchen Wert hat dein Ass?</div><div style="display:flex;gap:8px;"><button class="btn btn-primary" style="flex:1;height:48px;font-size:20px;font-weight:800;" onclick="bjChooseAss('${esc(s)}',1)">1</button><button class="btn btn-primary" style="flex:1;height:48px;font-size:20px;font-weight:800;" onclick="bjChooseAss('${esc(s)}',11)">11</button></div></div>`;
-      } else {
-        html+=`<button class="btn btn-primary" style="width:100%;margin-top:6px;height:46px;font-size:16px;font-weight:700;" onclick="bjAufdecken('${esc(s)}')">🂠 Aufdecken</button>`;
-      }
+    const savedTeam = localStorage.getItem('kegel_team');
+    const savedMode = localStorage.getItem('kegel_mode');
+    if (savedTeam) {
+        currentTeam = savedTeam;
+        if (savedMode==='normal'||savedMode==='stadtmeisterschaft') {
+            showMode(savedMode);
+        } else {
+            const label = savedTeam==='custom' ? 'Neues Team – was möchtest du machen?' :
+                          'Team: ' + PRESET_TEAMS[savedTeam].name + ' – was möchtest du machen?';
+            document.getElementById('modeSelectTeamLabel').textContent = label;
+            document.getElementById('modeSelectScreen').classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('teamSelectScreen').classList.remove('hidden');
     }
-    if(histStr) html+=`<div class="bj-throws-history">${histStr}</div>`;
-    html+=`</div>`;
-  });
+});
 
-  if(bj.showResult) html+=renderBJResult(aktiv);
-  const allRevealed=aktiv.length>0&&aktiv.every(s=>{const p=bj.players[s];return p&&(p.revealed||p.busted||p.won);});
-  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
-    <button class="btn btn-danger" onclick="bjReset()" style="flex:1;">Zurücksetzen</button>
-    ${allRevealed&&!bj.showResult?`<button class="btn btn-primary" onclick="bjAuswerten()" style="flex:1;">Auswerten</button>`:''}
-  </div></div></div>`;
-  return html;
-}
+function openStandings() { save(); window.open(location.pathname+location.search+'#standings','_blank'); }
 
-function renderBJResult(spieler) {
-  const bj=state.blackjack;
-  const busted=spieler.filter(s=>bj.players[s]?.busted);
-  const won21=spieler.filter(s=>bj.players[s]?.won);
-  const others=spieler.filter(s=>!bj.players[s]?.busted&&!bj.players[s]?.won).sort((a,b)=>(bj.players[b]?.total||0)-(bj.players[a]?.total||0));
-  const loserStart=Math.max(0,others.length-bj.loserCount);
-  let html='<div class="result-list" style="margin-top:14px;">';
-  won21.forEach(s=>{ html+=`<div class="bj-result-row win-row"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span style="flex:1;font-size:14px;font-weight:600;">${s.trim()}</span><span class="bj-result-label" style="background:#e8fde8;color:#27ae60;">21 — Gewonnen!</span><span style="font-size:16px;font-weight:800;color:#27ae60;">21</span></div>`; });
-  others.forEach((s,i)=>{ const isLoser=i>=loserStart,score=bj.players[s]?.total||0; html+=`<div class="bj-result-row${isLoser?' extra-loser':''}"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span style="flex:1;font-size:14px;font-weight:600;">${s.trim()}</span>${isLoser?`<span class="bj-result-label" style="background:#fde8e8;color:#c0392b;">Verlierer</span>`:''}<span style="font-size:16px;font-weight:700;">${score}</span></div>`; });
-  busted.forEach(s=>{ const score=bj.players[s]?.total||0; html+=`<div class="bj-result-row bust-row"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span style="flex:1;font-size:14px;font-weight:600;">${s.trim()}</span><span class="bj-result-label" style="background:#fde8e8;color:#c0392b;">Überworfen!</span><span style="font-size:16px;font-weight:700;color:#c0392b;">${score}</span></div>`; });
-  return html+'</div>';
-}
+// ══════════════════════════════════════════════════════
+//  TAB NAVIGATION
+// ══════════════════════════════════════════════════════
+const TAB_KEYS = ['mannschaft','runde1','runde2','schraege3','fredenbaum','ergebnis'];
+const NAV_IDS  = ['navMannschaft','navRunde1','navRunde2','navSchraege3','navFredenbaum','navErgebnis'];
+const TAB_IDS  = ['tabMannschaft','tabRunde1','tabRunde2','tabSchraege3','tabFredenbaum','tabErgebnis'];
 
-function toggleBlackjack() { state.blackjack.open=!state.blackjack.open; renderSpiele(); }
-function bjChangeLoser(d) { state.blackjack.loserCount=Math.max(0,state.blackjack.loserCount+d); renderSpiele(); }
-function bjPickCard(s,cardId) {
-  bjInitPlayer(s); const p=state.blackjack.players[s];
-  if(p.done||p.revealed||p.busted||p.won) return;
-  const card=BJ_CARDS.find(c=>c.id===cardId); if(!card) return;
-  p.cardId=cardId; p.cardVal=card.isAss?0:card.val;
-  p.throws=[]; p.throwsTotal=0; p.total=0; p.done=false; p.revealed=false; p.busted=false; p.won=false; p.assChoice=null; p.assChoosing=false;
-  state.blackjack.showResult=false;
-  if(navigator.vibrate) navigator.vibrate(15); renderSpiele();
-}
-function bjThrow(s,n) {
-  bjInitPlayer(s); const p=state.blackjack.players[s];
-  if(!p.cardId||p.done||p.revealed||p.busted||p.won) return;
-  p.throws.push(n); p.throwsTotal+=n;
-  if(navigator.vibrate) navigator.vibrate(15); renderSpiele();
-}
-function bjStehen(s) {
-  bjInitPlayer(s); const p=state.blackjack.players[s];
-  if(!p.cardId||p.done||p.revealed) return;
-  p.done=true; if(navigator.vibrate) navigator.vibrate(25); renderSpiele();
-}
-function bjClearCard(s) {
-  bjInitPlayer(s); const p=state.blackjack.players[s];
-  if(p.throws.length>0||p.done||p.revealed) return;
-  p.cardId=null; p.cardVal=0; p.assChoice=null; p.assChoosing=false; renderSpiele();
-}
-function bjChooseAss(s,val) {
-  bjInitPlayer(s); const p=state.blackjack.players[s];
-  if(p.cardId!=='ass'||p.revealed) return;
-  p.assChoice=val; p.cardVal=val; bjAufdecken(s);
-}
-function bjAufdecken(s) {
-  bjInitPlayer(s); const p=state.blackjack.players[s];
-  if(!p.cardId||p.revealed) return;
-  if(p.cardId==='ass'&&p.assChoice===null){p.assChoosing=true;renderSpiele();return;}
-  p.revealed=true; p.total=p.throwsTotal+p.cardVal;
-  if(p.total>21){p.busted=true;if(navigator.vibrate)navigator.vibrate([80,60,80]);}
-  else if(p.total===21){p.won=true;if(navigator.vibrate)navigator.vibrate([50,30,50,30,100]);}
-  else if(navigator.vibrate) navigator.vibrate(30);
-  renderSpiele();
-}
-function bjAuswerten() { state.blackjack.showResult=true; renderSpiele(); }
-function bjReset() { state.blackjack.players={}; state.blackjack.showResult=false; renderSpiele(); }
-
-// ── Tag-Nacht ─────────────────────────────────────────────────
-const TN_ROUNDS=[
-  {id:'tag1',label:'Tag 1',group:'day',mult:1},{id:'tag2',label:'Tag 2',group:'day',mult:1},{id:'tag3',label:'Tag 3',group:'day',mult:1},
-  {id:'nacht1',label:'Nacht 1',group:'night',mult:2},{id:'nacht2',label:'Nacht 2',group:'night',mult:2},{id:'nacht3',label:'N.d.N.',group:'night3',mult:3},
-];
-function tnTotal(s) { const sc=state.tagnacht.scores[s]||{}; return TN_ROUNDS.reduce((sum,r)=>sum+(parseFloat(sc[r.id])||0)*r.mult,0); }
-
-function renderTagNachtCard() {
-  const tn=state.tagnacht;
-  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
-  const startedCnt=aktiv.filter(s=>TN_ROUNDS.some(r=>(tn.scores[s]||{})[r.id]!==''&&(tn.scores[s]||{})[r.id]!==undefined)).length;
-  const metaLabel=startedCnt>0?`${startedCnt}/${aktiv.length} Spieler eingetragen`:`${aktiv.length} Spieler · 3 Tage × 3 Nächte`;
-
-  let html=`<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleTagNacht()">
-      <div><div class="spiel-title">Tag-Nacht</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${tn.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${tn.open?' open':''}">
-    <div class="spiel-desc">Ein Einzelspiel. Man spielt <strong>3 Tage</strong> und <strong>3 Nächte</strong>.<br><br>Jeder Spieler macht einen Wurf pro Runde. <strong>Tage</strong> zählen einfach, <strong>Nächte</strong> zählen doppelt. Die dritte Nacht ist die <strong>„Nacht der Nächte"</strong> — sie zählt dreifach.<br><br>Die Spieler mit der <strong>geringsten Punktzahl</strong> verlieren. Legt vorher fest, wie viele Spieler verlieren.</div>
-    <div class="loser-count-row">
-      <span class="loser-count-label">Anzahl Verlierer</span>
-      <div class="stepper">
-        <button class="stepper-btn" onclick="tnChangeLoser(-1)">−</button>
-        <span class="stepper-val">${tn.loserCount}</span>
-        <button class="stepper-btn" onclick="tnChangeLoser(1)">+</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;font-size:11px;color:#888;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0ede8;">
-      <span>☀️ Tag = ×1</span><span>🌙 Nacht = ×2</span><span>🌑 Nacht der Nächte = ×3</span>
-    </div>`;
-
-  aktiv.forEach(s=>{
-    if(!tn.scores[s]) tn.scores[s]={};
-    const sc=tn.scores[s], total=tnTotal(s), anyFilled=TN_ROUNDS.some(r=>sc[r.id]!==''&&sc[r.id]!==undefined);
-    html+=`<div class="tn-player-row">
-      <div class="tn-player-info"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span class="tn-player-name">${s.trim()}</span></div>
-      <div class="tn-inputs">
-        <div class="tn-group"><span class="tn-group-label day">☀️</span>
-          ${['tag1','tag2','tag3'].map((id,i)=>`<input class="tn-inp" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[id]??''}" oninput="tnSet('${esc(s)}','${id}',this.value)">`).join('')}
-          <span class="tn-mult">×1</span></div>
-        <div class="tn-group"><span class="tn-group-label night">🌙</span>
-          ${['nacht1','nacht2'].map((id,i)=>`<input class="tn-inp night" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[id]??''}" oninput="tnSet('${esc(s)}','${id}',this.value)">`).join('')}
-          <span class="tn-mult" style="color:#666;">×2</span>
-          <span class="tn-group-label night" style="margin-left:6px;">🌑</span>
-          <input class="tn-inp night3" type="number" inputmode="numeric" min="0" max="9" placeholder="N" value="${sc['nacht3']??''}" oninput="tnSet('${esc(s)}','nacht3',this.value)">
-          <span class="tn-mult" style="color:#666;">×3</span></div>
-      </div>
-      <div class="tn-total-col"><div class="tn-total-val">${anyFilled?total:'–'}</div><div class="tn-total-label">Punkte</div></div>
-    </div>`;
-  });
-
-  if(tn.showResult) html+=renderTNResult(aktiv);
-  const anyData=aktiv.some(s=>TN_ROUNDS.some(r=>(tn.scores[s]||{})[r.id]!==''&&(tn.scores[s]||{})[r.id]!==undefined));
-  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
-    <button class="btn btn-danger" onclick="tnReset()" style="flex:1;">Zurücksetzen</button>
-    ${anyData?`<button class="btn btn-primary" onclick="tnAuswerten()" style="flex:1;">Auswerten</button>`:''}
-  </div></div></div>`;
-  return html;
-}
-
-function renderTNResult(spieler) {
-  const tn=state.tagnacht;
-  const ranked=spieler.map(s=>({name:s,total:tnTotal(s)})).sort((a,b)=>b.total-a.total);
-  const loserStart=Math.max(0,ranked.length-tn.loserCount);
-  let html='<div class="result-list" style="margin-top:14px;">';
-  ranked.forEach((p,i)=>{ const isLoser=i>=loserStart,isTop=i===0; html+=`<div class="result-row${isLoser?' loser':isTop?' top':''}"><span class="result-rank">${i+1}.</span><div class="avatar" style="background:${avatarColor(p.name)};width:24px;height:24px;font-size:9px;flex-shrink:0;">${initials(p.name)}</div><span class="result-name">${p.name.trim()}</span>${isLoser?'<span class="loser-badge">Verlierer</span>':isTop?'<span class="winner-tag">1. Platz</span>':''}<span class="result-score">${p.total}</span></div>`; });
-  return html+'</div>';
-}
-function toggleTagNacht() { state.tagnacht.open=!state.tagnacht.open; renderSpiele(); }
-function tnChangeLoser(d) { state.tagnacht.loserCount=Math.max(1,state.tagnacht.loserCount+d); renderSpiele(); }
-function tnSet(s,roundId,val) { if(!state.tagnacht.scores[s]) state.tagnacht.scores[s]={}; state.tagnacht.scores[s][roundId]=val; state.tagnacht.showResult=false; renderSpiele(); }
-function tnAuswerten() { state.tagnacht.showResult=true; renderSpiele(); }
-function tnReset() { state.tagnacht.scores={}; state.tagnacht.showResult=false; renderSpiele(); }
-
-// ── Berg und Talfahrt ─────────────────────────────────────────
-function btTotal(s) {
-  const sc=state.bergtal.scores[s]||{};
-  let total=0;
-  for(let i=1;i<=5;i++){const v=sc[`t${i}`];if(v===''||v===undefined||v===null)continue;total+=parseFloat(v)||0;}
-  for(let i=6;i<=10;i++){const v=sc[`t${i}`];if(v===''||v===undefined||v===null)continue;const n=parseFloat(v);total-=isNaN(n)?0:(n===0?10:n);}
-  return total;
-}
-function btBergSum(s){const sc=state.bergtal.scores[s]||{};let sum=0;for(let i=1;i<=5;i++){const v=sc[`t${i}`];if(v!==''&&v!==undefined&&v!==null)sum+=parseFloat(v)||0;}return sum;}
-function btTalSum(s){const sc=state.bergtal.scores[s]||{};let sum=0;for(let i=6;i<=10;i++){const v=sc[`t${i}`];if(v===''||v===undefined||v===null)continue;const n=parseFloat(v);sum+=isNaN(n)?0:(n===0?10:n);}return sum;}
-
-function renderBergTalCard() {
-  const bt=state.bergtal;
-  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
-  const startedCnt=aktiv.filter(s=>Object.values(bt.scores[s]||{}).some(v=>v!==''&&v!==undefined&&v!==null)).length;
-  const metaLabel=startedCnt>0?`${startedCnt}/${aktiv.length} Spieler eingetragen`:`${aktiv.length} Spieler · 5 Berg + 5 Tal`;
-
-  let html=`<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleBergTal()">
-      <div><div class="spiel-title">Berg und Talfahrt</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${bt.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${bt.open?' open':''}">
-    <div class="spiel-desc">Ein Einzelspiel mit <strong>10 Würfen</strong> pro Spieler.<br><br>⛰️ <strong>Würfe 1–5 (Berg):</strong> Punkte werden <strong>addiert</strong> — so hoch wie möglich werfen! Pumpe zählt 0.<br><br>🏔️ <strong>Würfe 6–10 (Tal):</strong> Punkte werden <strong>abgezogen</strong> — so niedrig wie möglich werfen! Pumpe zählt −10.<br><br>Ziel: am Ende möglichst viele Punkte auf dem Konto. Die Spieler mit der <strong>geringsten Punktzahl</strong> verlieren.</div>
-    <div class="loser-count-row">
-      <span class="loser-count-label">Anzahl Verlierer</span>
-      <div class="stepper">
-        <button class="stepper-btn" onclick="btChangeLoser(-1)">−</button>
-        <span class="stepper-val">${bt.loserCount}</span>
-        <button class="stepper-btn" onclick="btChangeLoser(1)">+</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:16px;font-size:11px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0ede8;">
-      <span style="color:#1a5c2a;font-weight:700;">⛰️ Berg (1–5) = addieren</span>
-      <span style="color:#b52222;font-weight:700;">🏔️ Tal (6–10) = abziehen</span>
-    </div>`;
-
-  aktiv.forEach(s=>{
-    if(!bt.scores[s]) bt.scores[s]={};
-    const sc=bt.scores[s], bergSum=btBergSum(s), talSum=btTalSum(s), total=btTotal(s);
-    const anyFilled=Object.values(sc).some(v=>v!==''&&v!==undefined&&v!==null);
-    const bergFilled=[1,2,3,4,5].some(i=>sc[`t${i}`]!==''&&sc[`t${i}`]!==undefined);
-    const talFilled=[6,7,8,9,10].some(i=>sc[`t${i}`]!==''&&sc[`t${i}`]!==undefined);
-    html+=`<div class="bt-player-row">
-      <div class="bt-player-info"><div class="avatar" style="background:${avatarColor(s)}">${initials(s)}</div><span class="bt-player-name">${s.trim()}</span></div>
-      <div class="bt-inputs">
-        <div class="bt-group"><span class="bt-group-label berg">⛰️</span>
-          ${Array.from({length:5},(_,i)=>`<input class="bt-inp berg" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[`t${i+1}`]??''}" oninput="btSet('${esc(s)}','t${i+1}',this.value)">`).join('')}
-          <span class="bt-sub" style="color:#1a5c2a;">${bergFilled?'+'+bergSum:''}</span></div>
-        <div class="bt-group"><span class="bt-group-label tal">🏔️</span>
-          ${Array.from({length:5},(_,i)=>`<input class="bt-inp tal" type="number" inputmode="numeric" min="0" max="9" placeholder="${i+1}" value="${sc[`t${i+6}`]??''}" oninput="btSet('${esc(s)}','t${i+6}',this.value)">`).join('')}
-          <span class="bt-sub" style="color:#b52222;">${talFilled?'−'+talSum:''}</span></div>
-      </div>
-      <div class="bt-total-col"><div class="bt-total-val${anyFilled&&total<0?' negative':''}">${anyFilled?total:'–'}</div><div class="bt-total-label">Punkte</div></div>
-    </div>`;
-  });
-
-  if(bt.showResult) html+=renderBTResult(aktiv);
-  const anyData=aktiv.some(s=>Object.values(bt.scores[s]||{}).some(v=>v!==''&&v!==undefined&&v!==null));
-  html+=`<div style="display:flex;gap:8px;margin-top:14px;">
-    <button class="btn btn-danger" onclick="btReset()" style="flex:1;">Zurücksetzen</button>
-    ${anyData?`<button class="btn btn-primary" onclick="btAuswerten()" style="flex:1;">Auswerten</button>`:''}
-  </div></div></div>`;
-  return html;
-}
-
-function renderBTResult(spieler) {
-  const bt=state.bergtal;
-  const ranked=spieler.map(s=>({name:s,total:btTotal(s)})).sort((a,b)=>b.total-a.total);
-  const loserStart=Math.max(0,ranked.length-bt.loserCount);
-  let html='<div class="result-list" style="margin-top:14px;">';
-  ranked.forEach((p,i)=>{ const isLoser=i>=loserStart,isTop=i===0; html+=`<div class="result-row${isLoser?' loser':isTop?' top':''}"><span class="result-rank">${i+1}.</span><div class="avatar" style="background:${avatarColor(p.name)};width:24px;height:24px;font-size:9px;flex-shrink:0;">${initials(p.name)}</div><span class="result-name">${p.name.trim()}</span>${isLoser?'<span class="loser-badge">Verlierer</span>':isTop?'<span class="winner-tag">1. Platz</span>':''}<span class="result-score">${p.total}</span></div>`; });
-  return html+'</div>';
-}
-function toggleBergTal() { state.bergtal.open=!state.bergtal.open; renderSpiele(); }
-function btChangeLoser(d) { state.bergtal.loserCount=Math.max(1,state.bergtal.loserCount+d); renderSpiele(); }
-function btSet(s,k,val) { if(!state.bergtal.scores[s]) state.bergtal.scores[s]={}; state.bergtal.scores[s][k]=val; state.bergtal.showResult=false; renderSpiele(); }
-function btAuswerten() { state.bergtal.showResult=true; renderSpiele(); }
-function btReset() { state.bergtal.scores={}; state.bergtal.showResult=false; renderSpiele(); }
-
-// ── Mensch ärgere dich nicht ──────────────────────────────────
-function renderMadnCard() {
-  const g=state.madn;
-  const hasOrder=g.order.length>0;
-  let metaLabel='Einzelspiel · Exakt 50 Punkte';
-  if(hasOrder&&g.winner) metaLabel=`🏆 ${g.winner.trim()} hat gewonnen!`;
-  else if(hasOrder) metaLabel=`Dran: ${g.order[g.currentTurn].trim()} · ${g.order.length} Spieler`;
-
-  let html=`<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleMadn()">
-      <div><div class="spiel-title">Mensch ärgere dich nicht</div><div class="spiel-meta">${metaLabel}</div></div>
-      <span class="spiel-chevron${g.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${g.open?' open':''}">
-    <div class="spiel-desc">Reihum wirft jeder <strong>die Vollen</strong>, bis er <strong>exakt 50 Punkte</strong> erreicht.<br><br>⚠️ Erreicht ein Spieler dieselbe Punktzahl wie ein anderer, wird der andere auf <strong>0 zurückgesetzt</strong>. Wer <strong>über 50</strong> kommt, fängt ebenfalls wieder bei 0 an.<br><br>Nur wer <strong>exakt 50</strong> trifft, gewinnt. Mensch ärgere dich nicht!</div>`;
-
-  if(!hasOrder){
-    html+=`<button class="btn btn-primary" onclick="madnAuslosen()" style="width:100%;margin-top:4px;padding:12px;">🎲 Reihenfolge auslosen</button>`;
-  } else {
-    html+=`<div style="margin-bottom:10px;">`;
-    g.order.forEach((s,idx)=>{
-      const score=g.scores[s]||0, isActive=idx===g.currentTurn&&!g.winner, isWinner=g.winner===s;
-      const wasReset=g.lastReset.some(r=>r.name===s);
-      const pct=Math.min(100,(score/50)*100);
-      let fillColor='#1a5c2a';
-      if(score>=45) fillColor='#b52222'; else if(score>=30) fillColor='#c8860a';
-      html+=`<div class="madn-player-row${isActive?' madn-active-row':''}">
-        <div class="madn-order-badge${isActive?' active':isWinner?' won':''}">${idx+1}</div>
-        <div class="avatar" style="background:${avatarColor(s)};width:24px;height:24px;font-size:9px;flex-shrink:0;">${initials(s)}</div>
-        <div class="madn-name-col">${s.trim()}</div>
-        <div class="madn-progress-col"><div class="madn-progress-bar-bg"><div class="madn-progress-fill" style="width:${pct}%;background:${fillColor};"></div></div></div>
-        <div class="madn-score-num${isWinner?' won':''}">${score}</div>
-        ${wasReset?`<span class="madn-reset-tag">↩ 0</span>`:`<span class="madn-reset-tag-spacer"></span>`}
-      </div>`;
+function switchTab(tab, skipSave) {
+    S.activeTab = tab;
+    if (!skipSave) save();
+    TAB_KEYS.forEach((t,i) => {
+        document.getElementById(TAB_IDS[i]).classList.toggle('hidden', t!==tab);
+        document.getElementById(NAV_IDS[i]).classList.toggle('active', t===tab);
     });
-    html+=`</div>`;
+    updateNavBadges();
+    if (tab==='runde1')    buildFidvTable(1);
+    if (tab==='runde2')    buildFidvTable(2);
+    if (tab==='schraege3') buildS3Tab();
+    if (tab==='fredenbaum') buildFbTab();
+    if (tab==='ergebnis')  renderErgebnis();
+    window.scrollTo({top:0,behavior:'smooth'});
+}
 
-    if(!g.winner){
-      const current=g.order[g.currentTurn], currentScore=g.scores[current]||0;
-      html+=`<div class="madn-active-section">
-        <div class="madn-active-label">🎳 Dran: ${current.trim()} — aktuell ${currentScore} Punkte</div>
-        <div class="madn-numpad">${[0,1,2,3,4,5,6,7,8,9].map(n=>`<button class="madn-num-btn" onclick="madnThrow(${n})">${n}</button>`).join('')}</div>
-      </div>`;
+function updateNavBadges() {
+    const hasG1 = S.players.some(p => anyScore(S.scores.g1[p.id]));
+    const hasG2 = S.players.some(p => anyScore(S.scores.g2[p.id]));
+    const hasS3 = S.players.some(p => anyS3Score(S.scores.s3[p.id]));
+    const hasFb = S.players.some(p => anyFbScore(p.id));
+    document.getElementById('navRunde1').classList.toggle('has-data', hasG1);
+    document.getElementById('navRunde2').classList.toggle('has-data', hasG2);
+    document.getElementById('navSchraege3').classList.toggle('has-data', hasS3);
+    document.getElementById('navFredenbaum').classList.toggle('has-data', hasFb);
+}
+
+function anyScore(arr)   { return arr && arr.some(v=>v!==null); }
+function anyS3Score(arr) { return arr && arr.some(a=>a&&a.length>0); }
+function anyFbScore(pid) { const a=S.scores.fb[pid]; return a&&a.some(r=>r&&r.length>0); }
+
+// ══════════════════════════════════════════════════════
+//  MANNSCHAFT
+// ══════════════════════════════════════════════════════
+function onTeamName() {
+    S.teamName = document.getElementById('teamNameInput').value.trim();
+    document.getElementById('teamLabel').textContent = S.teamName || 'Mannschaft erfassen';
+    save();
+}
+
+function addPlayer() {
+    const inp  = document.getElementById('playerInput');
+    const name = inp.value.trim();
+    if (!name) return;
+    const id = S.nextId++;
+    S.players.push({ id, name, isAufschreiber:false, isDamen:false });
+    S.scores.g1[id] = [null,null,null,null,null];
+    S.scores.g2[id] = [null,null,null,null,null];
+    S.scores.s3[id] = [[],[],[],[],[]];
+    S.scores.fb[id] = Array(10).fill(null).map(()=>[]);
+    inp.value = ''; inp.focus();
+    renderPlayers(); save();
+}
+
+function removePlayer(id) {
+    S.players = S.players.filter(p=>p.id!==id);
+    ['g1','g2','s3','fb'].forEach(k=>delete S.scores[k][id]);
+    renderPlayers(); save();
+}
+
+function toggleAuf(id)   { const p=S.players.find(p=>p.id===id); if(p) p.isAufschreiber=!p.isAufschreiber; renderPlayers(); save(); }
+function toggleDamen(id) { const p=S.players.find(p=>p.id===id); if(p) p.isDamen=!p.isDamen; renderPlayers(); save(); }
+
+function renderPlayers() {
+    const list = document.getElementById('playerList');
+    const hint = document.getElementById('aufschreiberHint');
+    if (!S.players.length) {
+        list.innerHTML = '<p class="empty-hint">Noch keine Spieler hinzugefügt.</p>';
+        hint.style.display = 'none';
+        return;
     }
-    if(g.winner) html+=`<div class="madn-winner-banner">🏆 ${g.winner.trim()} hat exakt 50 erreicht und gewonnen!</div>`;
-
-    html+=`<div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn btn-danger" onclick="madnReset()" style="flex:1;">Neues Spiel</button>
-      <button class="btn" onclick="madnAuslosen()" style="flex:1;">Neu auslosen</button>
-    </div>`;
-  }
-  html+=`</div></div>`;
-  return html;
+    hint.style.display = 'block';
+    list.innerHTML = S.players.map(p => `
+        <div class="player-item ${p.isAufschreiber?'aufschreiber':''}">
+            <span class="player-name">${esc(p.name)}</span>
+            ${p.isAufschreiber ? '<span class="badge badge-auf">Aufschreiber</span>' : ''}
+            ${p.isDamen        ? '<span class="badge badge-damen">♀ Damen</span>'   : ''}
+            <button class="btn btn-sm ${p.isAufschreiber?'btn-accent':'btn-outline'}" onclick="toggleAuf(${p.id})">
+                ${p.isAufschreiber?'✓ Aufschreiber':'📝 Aufschreiber'}
+            </button>
+            <button class="btn btn-sm ${p.isDamen?'btn-success':'btn-outline'}" onclick="toggleDamen(${p.id})">
+                ${p.isDamen?'♀ Damen':'♂ Herren'}
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="removePlayer(${p.id})">✕</button>
+        </div>`).join('');
+    updateNavBadges();
 }
 
-function madnThrow(value) {
-  const g=state.madn;
-  if(g.winner) return;
-  const s=g.order[g.currentTurn], oldScore=g.scores[s]||0, newScore=oldScore+value;
-  g.lastReset=[];
-  if(newScore>50){g.scores[s]=0;g.lastReset.push({name:s,reason:'over'});}
-  else if(newScore===50){
-    g.scores[s]=50; g.winner=s;
-  } else {
-    g.scores[s]=newScore;
-    if(newScore>0){
-      g.order.forEach(other=>{
-        if(other!==s&&(g.scores[other]||0)===newScore){g.scores[other]=0;g.lastReset.push({name:other,reason:'collision'});}
-      });
+// ══════════════════════════════════════════════════════
+//  FÜNF IN DIE VOLLEN
+// ══════════════════════════════════════════════════════
+function buildFidvTable(rnd) {
+    const gk=rnd===1?'g1':'g2', wrap=document.getElementById(`scoreWrap${rnd}`), noPl=document.getElementById(`noPlayers${rnd}`);
+    if (!S.players.length) {
+        noPl.classList.remove('hidden');
+        const allPins=[true,true,true,true,true,true,true,true,true];
+        wrap.innerHTML=`<div class="ov-wrap">
+            <div class="ov-hint" style="font-size:.9rem;padding-bottom:.9rem">Noch keine Spieler eingetragen – so sieht das Spiel aus:</div>
+            <div class="ov-section">
+                <span class="ov-section-title grey">Normaler Wurf – alle 9 Kegel stehen</span>
+                <div class="ov-grid">
+                    <div class="ov-card">
+                        <div class="ov-card-top" style="color:var(--text-light)">Kegel aufgestellt</div>
+                        ${pinSvgRef(allPins,1,false)}
+                        <div class="ov-card-pts" style="color:var(--text-light)">0–9 Pkt pro Wurf</div>
+                    </div>
+                    <div class="ov-card blue">
+                        <div class="ov-card-top">🏆 Kranz</div>
+                        ${pinSvgRef(allPins,1,true)}
+                        <div class="ov-card-pts" style="color:var(--klein)">Alle 9 = 10 Pkt</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ov-section" style="margin-top:.5rem">
+                <span class="ov-section-title grey">Spielregeln</span>
+                <div class="info-box">5 Würfe je Spieler · jeder getroffene Kegel = 1 Punkt · <strong>Kranz</strong> (alle 9 auf einmal) = 10 Punkte · <strong>Pumpe</strong> = 0 Punkte</div>
+            </div>
+        </div>`;
+        return;
     }
-  }
-  if(!g.winner) g.currentTurn=(g.currentTurn+1)%g.order.length;
-  if(navigator.vibrate) navigator.vibrate(15);
-  renderSpiele();
-}
-function toggleMadn() { state.madn.open=!state.madn.open; renderSpiele(); }
-function madnAuslosen() {
-  const spieler=state.spieler.filter(s=>state.anwesend.includes(s));
-  const shuffled=[...spieler].sort(()=>Math.random()-0.5);
-  state.madn.order=shuffled; state.madn.scores={}; shuffled.forEach(s=>{state.madn.scores[s]=0;});
-  state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[]; state.madn.open=true;
-  renderSpiele();
-}
-function madnReset() {
-  state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0;
-  state.madn.winner=null; state.madn.lastReset=[]; renderSpiele();
+    noPl.classList.add('hidden');
+    S.players.forEach(p=>{ if(!S.scores[gk][p.id]) S.scores[gk][p.id]=[null,null,null,null,null]; });
+    const rows = S.players.map(p=>{
+        const sc=S.scores[gk][p.id];
+        let cells='';
+        for (let i=0;i<5;i++){
+            const isNK=sc[i]===10, val=(!isNK&&sc[i]!==null)?sc[i]:'';
+            cells+=`<td class="throw-cell"><div class="throw-wrap">
+                ${isNK?`<div class="nk-display">🏆Kranz</div>`:`<input type="number" min="0" max="9" value="${val}" placeholder="–" oninput="onFidvScore(${rnd},${p.id},${i},this.value)" onfocus="this.select()">`}
+                <button class="nk-btn ${isNK?'active':''}" onclick="toggleNK(${rnd},${p.id},${i})" title="Naturkranz – alle 9 Kegel = 10 Pkt">Kranz</button>
+                <button class="pumpe-btn" onclick="setPumpe(${rnd},${p.id},${i})" title="Pumpe – 0 Punkte">Pumpe</button>
+            </div></td>`;
+        }
+        const tot=sumArr(sc);
+        return `<tr class="${p.isAufschreiber?'auf-row':''}">
+            <td>${esc(p.name)}${p.isAufschreiber?'<br><span class="badge badge-auf" style="font-size:.6rem">Aufschreiber</span>':''}</td>
+            ${cells}<td class="total-cell" id="tot_r${rnd}_p${p.id}">${tot!==null?tot:'—'}</td>
+        </tr>`;
+    }).join('');
+    wrap.innerHTML=`<table><thead><tr><th>Spieler</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th><th>Gesamt</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// ── 4 Gewinnt ─────────────────────────────────────────────────
-function renderVierGewinntCard() {
-  const vg = state.vierGewinnt;
-  const n1 = vg.teamName1||'Team 1', n2 = vg.teamName2||'Team 2';
-  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+function onFidvScore(rnd,pid,idx,val) {
+    const gk=rnd===1?'g1':'g2';
+    S.scores[gk][pid][idx]=val===''?null:Math.min(9,Math.max(0,parseInt(val)||0));
+    const el=document.getElementById(`tot_r${rnd}_p${pid}`);
+    if(el){ const t=sumArr(S.scores[gk][pid]); el.textContent=t!==null?t:'—'; }
+    updateNavBadges(); save();
+}
 
-  let boardCells = '';
-  for (let row=8; row>=0; row--) {
-    for (let col=0; col<9; col++) {
-      const val = vg.board[col][row];
-      const isWin = vg.winCells.some(wc => wc.col===col && wc.row===row);
-      const cls = isWin ? 'win-cell' : val===0 ? 't1' : val===1 ? 't2' : '';
-      boardCells += '<div class="vg-cell '+cls+'"></div>';
+function toggleNK(rnd,pid,idx){
+    const gk=rnd===1?'g1':'g2';
+    S.scores[gk][pid][idx]=S.scores[gk][pid][idx]===10?null:10;
+    save(); updateNavBadges(); buildFidvTable(rnd);
+}
+
+function setPumpe(rnd,pid,idx){
+    const gk=rnd===1?'g1':'g2';
+    S.scores[gk][pid][idx]=0;
+    save(); updateNavBadges(); buildFidvTable(rnd);
+}
+
+function sumArr(arr){ if(!arr||arr.every(v=>v===null)) return null; return arr.reduce((s,v)=>s+(v??0),0); }
+
+// ══════════════════════════════════════════════════════
+//  SCHRÄGE 3
+// ══════════════════════════════════════════════════════
+function buildS3Tab() {
+    if (!S.players.length) {
+        document.getElementById('noPlayersS3').classList.remove('hidden');
+        const cards = S3_PATTERNS.map((pat,i)=>{
+            const pts=pat.filter(Boolean).length;
+            return `<div class="ov-card blue">
+                <div class="ov-card-top">${S3_LABELS[i]}</div>
+                ${pinSvgRef(pat,1,false)}
+                <div class="ov-card-pts">${pts} Kegel · max. ${pts} Pkt</div>
+            </div>`;
+        }).join('');
+        document.getElementById('s3Table').innerHTML=`<div class="ov-wrap">
+            <div class="ov-hint" style="font-size:.9rem;padding-bottom:.9rem">Noch keine Spieler eingetragen – so sehen die 5 Bilder aus:</div>
+            <div class="ov-section">
+                <span class="ov-section-title blue">🎯 Schräge Drei – alle 5 Bilder</span>
+                <div class="ov-grid">${cards}</div>
+            </div>
+            <div class="ov-section" style="margin-top:.5rem">
+                <span class="ov-section-title grey">Spielregeln</span>
+                <div class="info-box">1 Wurf pro Bild · nur die <strong>dunklen</strong> Kegel stehen · getroffene anklicken · jeder Kegel = 1 Punkt</div>
+            </div>
+        </div>`;
+        // hide the nav and strip while no players
+        document.getElementById('picNav').innerHTML='';
+        document.getElementById('patternStrip').innerHTML='';
+        return;
     }
-  }
-
-  let colBtns = '';
-  for (let col=0; col<9; col++) {
-    const full = vg.board[col].every(c => c!==null);
-    const dis = full || vg.winner!==null;
-    colBtns += '<button class="vg-col-btn"'+(dis?' disabled':'')+' onclick="vgDrop('+col+')">'+(col+1)+'</button>';
-  }
-
-  const playerChips = aktiv.map(s => {
-    const cls = vg.team1.includes(s)?'chip-team1':vg.team2.includes(s)?'chip-team2':'chip-unassigned';
-    return '<span class="tanne-player-chip '+cls+'" onclick="vgTogglePlayer(\''+esc(s)+'\')" style="cursor:pointer;"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>';
-  }).join('');
-
-  const t1Chips = vg.team1.map(s => '<span class="tanne-player-chip chip-team1" onclick="vgTogglePlayer(\''+esc(s)+'\')"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>').join('') || '<div style="font-size:12px;color:#bbb;padding:4px 0;">–</div>';
-  const t2Chips = vg.team2.map(s => '<span class="tanne-player-chip chip-team2" onclick="vgTogglePlayer(\''+esc(s)+'\')"><div class="avatar" style="background:'+avatarColor(s)+'">'+initials(s)+'</div>'+s.trim()+'</span>').join('') || '<div style="font-size:12px;color:#bbb;padding:4px 0;">–</div>';
-
-  const ctName = vg.currentTeam===0 ? n1 : n2;
-  const ctCls  = vg.currentTeam===0 ? 't1' : 't2';
-
-  let statusHtml = '';
-  if (vg.winner===null && aktiv.length>=2) {
-    statusHtml = '<div class="vg-turn-badge '+ctCls+'">🎳 '+esc(ctName)+' ist dran</div>';
-  } else if (vg.winner===-1) {
-    statusHtml = '<div class="vg-winner-banner">🤝 Unentschieden!</div>';
-  } else if (vg.winner!==null) {
-    const wn = vg.winner===0 ? n1 : n2;
-    statusHtml = '<div class="vg-winner-banner">🏆 '+esc(wn)+' gewinnt!</div>';
-  }
-
-  const pumpeBtn = vg.winner===null ? '<div class="vg-pumpe-row"><button class="vg-pumpe-btn" onclick="vgPumpe()">💨 Pumpe — keine Münze, nächstes Team</button></div>' : '';
-
-  return `<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleVierGewinnt()">
-      <div><div class="spiel-title">🔵 4 Gewinnt</div><div class="spiel-meta">2 Teams · 4 in einer Reihe gewinnt</div></div>
-      <span class="spiel-chevron${vg.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${vg.open?' open':''}">
-      <div class="spiel-desc">Teilt die Spieler auf 2 Teams auf. Nach jedem Wurf tippt ihr die geworfene Zahl (1–9) — die Münze eures Teams fällt in die entsprechende Spalte. Wer zuerst <strong>4 Münzen in einer Reihe</strong> verbindet (horizontal, vertikal oder diagonal), gewinnt! Bei einer <strong>Pumpe</strong> fällt keine Münze und das andere Team ist dran.</div>
-      <div class="team-names-row">
-        <div class="team-name-field">
-          <span class="team-name-label t1">Team 1</span>
-          <input class="team-name-input t1" type="text" maxlength="20" value="${esc(n1)}" oninput="state.vierGewinnt.teamName1=this.value;renderSpiele()" placeholder="Team 1">
-        </div>
-        <div class="team-name-field">
-          <span class="team-name-label t2">Team 2</span>
-          <input class="team-name-input t2" type="text" maxlength="20" value="${esc(n2)}" oninput="state.vierGewinnt.teamName2=this.value;renderSpiele()" placeholder="Team 2">
-        </div>
-      </div>
-      <div class="tanne-players-row">${playerChips}</div>
-      <div class="tanne-teams" style="margin-bottom:10px;">
-        <div class="tanne-team-col"><div class="tanne-team-label tanne-team1-label">${esc(n1)} (${vg.team1.length})</div>${t1Chips}</div>
-        <div class="tanne-team-col"><div class="tanne-team-label tanne-team2-label">${esc(n2)} (${vg.team2.length})</div>${t2Chips}</div>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <button class="btn" style="flex:1;" onclick="vgRandomTeams()">🎲 Zufällig aufteilen</button>
-      </div>
-      ${statusHtml}
-      <div class="vg-wrap">
-        <div class="vg-board">${boardCells}</div>
-        <div class="vg-col-btns">${colBtns}</div>
-      </div>
-      ${pumpeBtn}
-      <div class="spiel-actions" style="margin-top:12px;">
-        <button class="btn btn-danger" onclick="vgReset()">Zurücksetzen</button>
-      </div>
-    </div>
-  </div>`;
+    document.getElementById('noPlayersS3').classList.add('hidden');
+    S.players.forEach(p=>{ if(!S.scores.s3[p.id]) S.scores.s3[p.id]=[[],[],[],[]]; while(S.scores.s3[p.id].length<5) S.scores.s3[p.id].push([]); });
+    buildS3Nav(); buildS3Table(S.s3PicIdx);
 }
 
-function toggleVierGewinnt() {
-  state.vierGewinnt.open = !state.vierGewinnt.open;
-  renderSpiele();
+function buildS3Nav() {
+    document.getElementById('picNav').innerHTML = S3_LABELS.map((lbl,i)=>{
+        const has=S.players.some(p=>S.scores.s3[p.id]?.[i]?.length>0);
+        return `<button class="pic-btn ${i===S.s3PicIdx?'active':''} ${has?'has-data':''}" onclick="switchS3Pic(${i})">${lbl}</button>`;
+    }).join('');
 }
 
-function vgTogglePlayer(name) {
-  const vg = state.vierGewinnt;
-  if (vg.team1.includes(name)) { vg.team1 = vg.team1.filter(p=>p!==name); vg.team2.push(name); }
-  else if (vg.team2.includes(name)) { vg.team2 = vg.team2.filter(p=>p!==name); }
-  else { vg.team1.push(name); }
-  renderSpiele();
+function switchS3Pic(idx) { S.s3PicIdx=idx; buildS3Nav(); buildS3Table(idx); save(); }
+
+function buildS3Table(picIdx) {
+    const pat=S3_PATTERNS[picIdx], maxPts=pat.filter(Boolean).length;
+    document.getElementById('patternStrip').innerHTML=`<span class="pattern-strip-label">${S3_LABELS[picIdx]} – Vorlage:</span>${pinSvg(pat,[],-1,-1,true,'')}<span class="pattern-info">Max. ${maxPts} Pkt/Spieler</span>`;
+    const rows=S.players.map(p=>{
+        const knocked=S.scores.s3[p.id]?.[picIdx]??[];
+        const pts=knocked.filter(i=>pat[i]).length;
+        return `<tr class="${p.isAufschreiber?'auf-row':''}">
+            <td>${esc(p.name)}${p.isAufschreiber?'<br><span class="badge badge-auf" style="font-size:.6rem">Aufschreiber</span>':''}</td>
+            <td class="pin-cell"><div class="pin-wrap">${pinSvg(pat,knocked,p.id,picIdx,false,'toggleS3Pin')}<div class="pin-score">${pts>0?pts+' Pkt':'—'}</div></div></td>
+            <td class="total-cell" id="s3tot_p${p.id}">${getS3Total(p.id)??'—'}</td>
+        </tr>`;
+    }).join('');
+    document.getElementById('s3Table').innerHTML=`<table><thead><tr><th>Spieler</th><th>Kegel anklicken</th><th>Gesamt S3</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function vgRandomTeams() {
-  const vg = state.vierGewinnt;
-  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
-  const sh = [...aktiv].sort(()=>Math.random()-0.5);
-  vg.team1 = sh.filter((_,i)=>i%2===0);
-  vg.team2 = sh.filter((_,i)=>i%2===1);
-  renderSpiele();
+function toggleS3Pin(pid,picIdx,pinIdx) {
+    const arr=S.scores.s3[pid][picIdx], i=arr.indexOf(pinIdx);
+    if(i>=0) arr.splice(i,1); else arr.push(pinIdx);
+    save(); updateNavBadges(); buildS3Table(picIdx);
+    const el=document.getElementById(`s3tot_p${pid}`); if(el) el.textContent=getS3Total(pid)??'—';
 }
 
-function vgCheckWin(board, lc, lr, team) {
-  const dirs = [[1,0],[0,1],[1,1],[1,-1]];
-  for (const [dc,dr] of dirs) {
-    const cells = [{col:lc,row:lr}];
-    for (let i=1;i<4;i++){const c=lc+dc*i,r=lr+dr*i;if(c<0||c>8||r<0||r>8||board[c][r]!==team)break;cells.push({col:c,row:r});}
-    for (let i=1;i<4;i++){const c=lc-dc*i,r=lr-dr*i;if(c<0||c>8||r<0||r>8||board[c][r]!==team)break;cells.push({col:c,row:r});}
-    if (cells.length>=4) return cells;
-  }
-  return null;
+function getS3Total(pid) {
+    const rows=S.scores.s3[pid]; if(!rows) return null;
+    let tot=0, has=false;
+    rows.forEach((knocked,i)=>{ if(!knocked||!knocked.length) return; has=true; tot+=knocked.filter(j=>S3_PATTERNS[i][j]).length; });
+    return has?tot:null;
 }
 
-function vgDrop(col) {
-  const vg = state.vierGewinnt;
-  if (vg.winner!==null) return;
-  let dropRow = -1;
-  for (let r=0;r<9;r++) { if(vg.board[col][r]===null){dropRow=r;break;} }
-  if (dropRow===-1) return;
-  vg.board[col][dropRow] = vg.currentTeam;
-  vg.lastDrop = {col, row:dropRow};
-  const wc = vgCheckWin(vg.board, col, dropRow, vg.currentTeam);
-  if (wc) {
-    vg.winner = vg.currentTeam; vg.winCells = wc;
-    applyGamePenalty();
-  } else {
-    const draw = vg.board.every(c=>c.every(cell=>cell!==null));
-    if (draw) { vg.winner=-1; vg.winCells=[]; }
-    else vg.currentTeam = vg.currentTeam===0?1:0;
-  }
-  renderSpiele();
+// ══════════════════════════════════════════════════════
+//  FREDENBAUM
+// ══════════════════════════════════════════════════════
+function buildFbTab() {
+    if (!S.players.length) {
+        document.getElementById('noPlayersFb').classList.remove('hidden');
+        let kleinCards='', grossCards='';
+        for (let i=0;i<4;i++){
+            const pat=FB_PATTERNS[i], pts=pat.filter(Boolean).length, mult=FB_MULT[i];
+            kleinCards+=`<div class="ov-card blue">
+                <div class="ov-card-top">Wurf ${i+1} <span style="font-weight:900">×${mult}</span></div>
+                ${pinSvgRef(pat,1,false)}
+                <div class="ov-card-pts">${pts} Kegel · max. ${pts*mult} Pkt</div>
+            </div>`;
+        }
+        for (let i=4;i<10;i++){
+            const pat=FB_PATTERNS[i], pts=pat.filter(Boolean).length, mult=FB_MULT[i];
+            grossCards+=`<div class="ov-card purple">
+                <div class="ov-card-top">Wurf ${i+1} <span style="font-weight:900">×${mult}</span></div>
+                ${pinSvgRef(pat,1,false)}
+                <div class="ov-card-pts">${pts} Kegel · max. ${pts*mult} Pkt</div>
+            </div>`;
+        }
+        document.getElementById('fbTable').innerHTML=`<div class="ov-wrap">
+            <div class="ov-hint" style="font-size:.9rem;padding-bottom:.9rem">Noch keine Spieler eingetragen – so sehen alle 10 Bilder aus:</div>
+            <div class="ov-section">
+                <span class="ov-section-title blue">🔵 Kleiner Fredenbaum – Würfe 1–4 (Damen &amp; Herren)</span>
+                <div class="ov-grid">${kleinCards}</div>
+            </div>
+            <div class="ov-section" style="margin-top:.85rem">
+                <span class="ov-section-title purple">🟣 Großer Fredenbaum – Würfe 5–10 (nur Herren)</span>
+                <div class="ov-grid">${grossCards}</div>
+            </div>
+            <div class="ov-section" style="margin-top:.5rem">
+                <span class="ov-section-title grey">Spielregeln</span>
+                <div class="info-box">Getroffene Kegel × Wurfmultiplikator = Punkte · <strong>Damen</strong> kegeln Würfe 1–4 · <strong>Herren</strong> kegeln alle 10 Würfe</div>
+            </div>
+        </div>`;
+        // hide nav + strip while no players
+        document.getElementById('fbNav').innerHTML='';
+        document.getElementById('fbPatternStrip').innerHTML='';
+        return;
+    }
+    document.getElementById('noPlayersFb').classList.add('hidden');
+    S.players.forEach(p=>{ if(!S.scores.fb[p.id]||S.scores.fb[p.id].length<10) S.scores.fb[p.id]=Array(10).fill(null).map((_,i)=>(S.scores.fb[p.id]?.[i]||[])); });
+    buildFbNav(); buildFbTable(S.fbThrowIdx);
 }
 
-function vgPumpe() {
-  const vg = state.vierGewinnt;
-  if (vg.winner!==null) return;
-  vg.lastDrop = null;
-  vg.currentTeam = vg.currentTeam===0?1:0;
-  renderSpiele();
+function buildFbNav() {
+    const t=S.fbThrowIdx;
+    let kleinBtns='', grossBtns='';
+    for (let i=0;i<4;i++){
+        const has=S.players.some(p=>S.scores.fb[p.id]?.[i]?.length>0);
+        kleinBtns+=`<button class="fb-btn ${i===t?'active':''} ${has?'has-data':''}" onclick="switchFbThrow(${i})">${i+1}<span class="mult">×${FB_MULT[i]}</span></button>`;
+    }
+    for (let i=4;i<10;i++){
+        const has=S.players.some(p=>S.scores.fb[p.id]?.[i]?.length>0);
+        grossBtns+=`<button class="fb-btn ${i===t?'active':''} ${has?'has-data':''}" onclick="switchFbThrow(${i})">${i+1}<span class="mult">×${FB_MULT[i]}</span></button>`;
+    }
+    document.getElementById('fbNav').innerHTML=`
+        <div class="fb-nav">
+            <div class="fb-group klein">
+                <div class="fb-group-label">🔵 KLEINER FREDENBAUM</div>
+                <div class="fb-group-btns">${kleinBtns}</div>
+            </div>
+            <div class="fb-group gross">
+                <div class="fb-group-label">🟣 GROSSER FREDENBAUM (inkl. Bilder 1–4)</div>
+                <div class="fb-group-btns">${grossBtns}</div>
+            </div>
+        </div>`;
 }
 
-function vgReset() {
-  const vg = state.vierGewinnt;
-  vg.board = Array.from({length:9},()=>new Array(9).fill(null));
-  vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null;
-  renderSpiele();
-}
+function switchFbThrow(idx) { S.fbThrowIdx=idx; buildFbNav(); buildFbTable(idx); save(); }
 
-// ── Busfahren ─────────────────────────────────────────────────
-const BF_COLORS = ['#888','#e74c3c','#e67e22','#c9a227','#27ae60','#16a085','#2980b9','#8e44ad','#e91e8c','#2c3e50'];
+function buildFbTable(throwIdx) {
+    const pat=FB_PATTERNS[throwIdx], mult=FB_MULT[throwIdx], isGross=throwIdx>=4;
+    const maxPts=pat.filter(Boolean).length*mult;
+    const groupLabel=isGross?'Großer Fredenbaum':'Kleiner Fredenbaum';
+    const groupColor=isGross?'var(--gross)':'var(--klein)';
 
-function renderBusfahrenCard() {
-  const bf = state.busfahren;
-  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
-  const bfc = n => BF_COLORS[n] || '#888';
-  const order = bf.playerOrder.length > 0 ? bf.playerOrder : aktiv;
+    document.getElementById('fbPatternStrip').innerHTML=`
+        <span class="pattern-strip-label" style="color:${groupColor}">Wurf ${throwIdx+1} (×${mult}) – ${groupLabel} – Vorlage:</span>
+        ${pinSvg(pat,[],-1,-1,true,'')}
+        <span class="pattern-info">Max. ${maxPts} Pkt/Spieler</span>`;
 
-  let bodyHtml = '';
+    const rows=S.players.map(p=>{
+        const isDamen=p.isDamen, skip=isGross&&isDamen;
+        const knocked=skip?[]:S.scores.fb[p.id]?.[throwIdx]??[];
+        const pts=skip?0:knocked.filter(i=>pat[i]).length*mult;
 
-  // ── Phase 0: Reihenfolge festlegen ──────────────────────────
-  if (bf.phase === 'order') {
-    const chips = aktiv.map(p => {
-      const pos = bf.playerOrder.indexOf(p);
-      const sel = pos !== -1;
-      return '<div onclick="bfSetOrder(\''+esc(p)+'\')" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px 9px 9px;border-radius:24px;cursor:pointer;border:2px solid '+(sel?'#1a1a1a':'#d0cdc5')+';background:'+(sel?'#1a1a1a':'#fff')+';color:'+(sel?'#fff':'#1a1a1a')+';font-size:14px;font-weight:600;user-select:none;transition:all 0.1s;">'
-        +(sel
-          ? '<span style="width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">'+(pos+1)+'</span>'
-          : '<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>')
-        +p.trim()+'</div>';
+        return `<tr class="${p.isAufschreiber?'auf-row':''}">
+            <td>${esc(p.name)}
+                ${p.isAufschreiber?'<br><span class="badge badge-auf" style="font-size:.6rem">Aufschreiber</span>':''}
+                ${isDamen?'<br><span class="badge badge-damen" style="font-size:.6rem">♀ Klein</span>':'<br><span class="badge" style="font-size:.6rem;background:#e8eaf6;color:var(--primary)">♂ Groß</span>'}
+            </td>
+            <td class="pin-cell">
+                ${skip
+                    ? `<div class="fb-skip-cell">Kleiner<br>Fredenbaum</div>`
+                    : `<div class="pin-wrap">${pinSvg(pat,knocked,p.id,throwIdx,false,'toggleFbPin')}<div class="pin-score" style="color:${groupColor}">${pts>0?pts+' Pkt':'—'}</div></div>`}
+            </td>
+            <td class="total-cell" id="fbtot_p${p.id}" style="color:${groupColor}">${getFbTotal(p.id)??'—'}</td>
+        </tr>`;
     }).join('');
 
-    const allOrdered = bf.playerOrder.length === aktiv.length;
-    const resetLink = bf.playerOrder.length > 0
-      ? '<button style="background:none;border:none;color:#c0392b;font-size:13px;cursor:pointer;padding:2px 0 14px;" onclick="bfResetOrder()">✕ Reihenfolge zurücksetzen</button>'
-      : '';
+    document.getElementById('fbTable').innerHTML=`<table>
+        <thead><tr>
+            <th>Spieler</th>
+            <th>Kegel anklicken<span class="mult-badge">×${mult}</span></th>
+            <th>Gesamt FB</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
 
-    bodyHtml = '<button class="btn btn-primary" style="width:100%;height:48px;font-size:15px;margin-bottom:10px;" onclick="bfRandomOrder()">🎲 Zufällige Reihenfolge</button>'
-      +'<div style="text-align:center;font-size:12px;color:#aaa;margin-bottom:12px;">— oder manuell antippen —</div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;">'+chips+'</div>'
-      +resetLink
-      +'<button class="btn btn-primary" style="width:100%;height:48px;font-size:15px;" onclick="bfConfirmOrder()" '+(allOrdered?'':'disabled')+'>Los geht\'s →</button>'
-      +(bf.playerOrder.length > 0 && !allOrdered ? '<div style="font-size:12px;color:#bbb;text-align:center;margin-top:8px;">'+bf.playerOrder.length+' von '+aktiv.length+' ausgewählt</div>' : '');
+function toggleFbPin(pid,throwIdx,pinIdx) {
+    const arr=S.scores.fb[pid][throwIdx], i=arr.indexOf(pinIdx);
+    if(i>=0) arr.splice(i,1); else arr.push(pinIdx);
+    save(); updateNavBadges(); buildFbTable(throwIdx);
+    const el=document.getElementById(`fbtot_p${pid}`); if(el) el.textContent=getFbTotal(pid)??'—';
+}
 
-  // ── Phase 1: Busbesetzung ────────────────────────────────────
-  } else if (bf.phase === 'assignment') {
-    const currentPlayer = order[bf.currentAssignIdx];
-
-    let assignedHtml = '';
-    for (let i=0; i<bf.currentAssignIdx && i<order.length; i++) {
-      const p = order[i], bn = bf.assignments[p], c = bfc(bn);
-      assignedHtml += '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8;">'
-        +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'
-        +'<span style="flex:1;font-size:13px;font-weight:600;">'+p.trim()+'</span>'
-        +'<span style="font-size:12px;font-weight:700;background:'+c+';color:#fff;padding:3px 10px;border-radius:8px;">🚌 Bus '+bn+'</span>'
-        +'</div>';
+function getFbTotal(pid) {
+    const p=S.players.find(p=>p.id===pid);
+    if(!p||!S.scores.fb[pid]) return null;
+    const maxT=p.isDamen?4:10;
+    let tot=0, has=false;
+    for(let t=0;t<maxT;t++){
+        const knocked=S.scores.fb[pid][t]??[];
+        if(knocked.length) has=true;
+        tot+=knocked.filter(i=>FB_PATTERNS[t][i]).length*FB_MULT[t];
     }
+    return has?tot:null;
+}
 
-    let numBtns = '';
-    for (let i=1; i<=9; i++) numBtns += '<button class="bf-num-btn" onclick="bfAssign('+i+')" '+(!currentPlayer?'disabled':'')+'>'+i+'</button>';
+// ══════════════════════════════════════════════════════
+//  PIN SVG (shared by S3 + Fredenbaum)
+//  fn: name of onclick callback function ('' = no click)
+// ══════════════════════════════════════════════════════
+function pinSvg(pattern, knocked, pid, idx, isRef, fn) {
+    const W=5*U, H=5*U, R=7;
+    const circles=pattern.map((avail,i)=>{
+        const cx=(PIN_C[i]+.5)*U, cy=(PIN_R[i]+.5)*U;
+        const isKnocked=knocked.includes(i);
+        let cls=!avail?'pin-out':isKnocked?'pin-knocked':'pin-avail';
+        const click=(!isRef&&avail&&fn)?`onclick="${fn}(${pid},${idx},${i})"`:'';
+        return `<circle cx="${cx}" cy="${cy}" r="${R}" class="${cls}" stroke-width="1.5" ${click}/>`;
+    }).join('');
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${circles}</svg>`;
+}
 
-    bodyHtml = '<div style="background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:center;">'
-      +'<div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">'+(currentPlayer?currentPlayer.trim():'Alle zugewiesen')+'</div>'
-      +'<div style="font-size:13px;color:#888;">'+(currentPlayer?'würfelt jetzt — Zahl = Busnummer':'Zuweisung abgeschlossen')+'</div>'
-      +'</div>'
-      +(assignedHtml?'<div style="margin-bottom:12px;">'+assignedHtml+'</div>':'')
-      +'<div class="bf-numpad">'+numBtns+'</div>'
-      +'<div style="font-size:12px;color:#bbb;text-align:center;">'+bf.currentAssignIdx+' von '+order.length+' zugewiesen</div>';
+// Non-interactive reference SVG – optional scale factor, optional highlight (all-green)
+function pinSvgRef(pattern, scale, allGreen) {
+    scale = scale || 1;
+    const u=U*scale, W=5*u, H=5*u, R=7*scale;
+    const circles=pattern.map((avail,i)=>{
+        const cx=(PIN_C[i]+.5)*u, cy=(PIN_R[i]+.5)*u;
+        let cls=!avail?'pin-out':allGreen?'pin-knocked':'pin-avail';
+        return `<circle cx="${cx}" cy="${cy}" r="${R}" class="${cls}" stroke-width="${1.5*scale}"/>`;
+    }).join('');
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${circles}</svg>`;
+}
 
-  // ── Phase 2+3: Spiel / Fertig ────────────────────────────────
-  } else {
-    const busNums = Object.keys(bf.buses).map(Number).sort((a,b)=>a-b);
+// ══════════════════════════════════════════════════════
+//  SHARED DATA BUILDER
+// ══════════════════════════════════════════════════════
+function buildData() {
+    const rows=S.players.map(p=>{
+        const r1=sumArr(S.scores.g1?.[p.id]), r2=sumArr(S.scores.g2?.[p.id]);
+        const s3=getS3Total(p.id), fb=getFbTotal(p.id);
+        const total=(r1!==null||r2!==null||s3!==null||fb!==null)?((r1??0)+(r2??0)+(s3??0)+(fb??0)):null;
+        return {...p, r1, r2, s3, fb, total};
+    });
+    const eligible=rows.filter(p=>!p.isAufschreiber).sort((a,b)=>(b.total??-1)-(a.total??-1));
+    const ow      =rows.filter(p=> p.isAufschreiber);
+    return {eligible, ow};
+}
 
-    let busCards = '';
-    for (const bn of busNums) {
-      const bus = bf.buses[bn], c = bfc(bn), isWin = bf.winner===bn;
-      let tires = '';
-      for (let i=0; i<6; i++) tires += '<div style="width:28px;height:28px;border-radius:50%;border:2.5px solid '+c+';background:'+(i<bus.tires?c:'transparent')+';opacity:'+(i<bus.tires?'1':'0.25')+';flex-shrink:0;"></div>';
-      const chips = bus.players.map(p=>
-        '<span class="tanne-player-chip" style="background:'+c+'20;border-color:'+c+'55;color:#222;">'
-        +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'+p.trim()+'</span>'
-      ).join('');
-      busCards += '<div style="border-radius:12px;border:2px solid '+c+';background:'+(isWin?c+'18':'#fff')+';padding:12px 14px;margin-bottom:8px;">'
-        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
-        +'<div style="width:44px;height:44px;border-radius:10px;background:'+c+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0;">'+bn+'</div>'
-        +'<div style="flex:1;"><div style="font-size:15px;font-weight:700;color:'+c+';">Bus '+bn+(isWin?' 🏆':'')+'</div>'
-        +'<div style="font-size:12px;color:#888;">'+bus.tires+' / 6 Reifen</div></div>'
-        +'</div>'
-        +'<div style="display:flex;gap:5px;margin-bottom:8px;">'+tires+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+chips+'</div>'
-        +'</div>';
-    }
+// ══════════════════════════════════════════════════════
+//  ERGEBNIS
+// ══════════════════════════════════════════════════════
+function renderErgebnis() {
+    const {eligible,ow}=buildData();
+    document.getElementById('ergebnisTeam').textContent=S.teamName?`Mannschaft: ${S.teamName}`:'';
+    if (!eligible.length&&!ow.length) { document.getElementById('ergebnisTable').innerHTML=''; document.getElementById('ergebnisEmpty').classList.remove('hidden'); document.getElementById('ergebnisHint').style.display='none'; document.getElementById('top6Summary').style.display='none'; return; }
+    document.getElementById('ergebnisEmpty').classList.add('hidden');
+    document.getElementById('ergebnisHint').style.display='block';
+    document.getElementById('ergebnisTable').innerHTML=makeResultTable(eligible,ow);
 
-    let statusHtml = '';
-    if (bf.phase==='done') {
-      const wn=bf.winner, wp=(bf.buses[wn]?.players||[]).join(', ');
-      statusHtml = '<div class="bf-winner-banner">🏆 Bus '+wn+' gewinnt!'+(wp?' · '+wp:'')+'</div>';
+    // Top-6-Gesamtscore
+    const top6 = eligible.slice(0,6);
+    if (top6.length > 0) {
+        const top6Total = top6.reduce((s,p)=>s+(p.total??0),0);
+        const breakdown = top6.map(p=>`${esc(p.name)}: ${p.total??0}`).join(' · ');
+        document.getElementById('top6Summary').style.display='block';
+        document.getElementById('top6Score').textContent=top6Total;
+        document.getElementById('top6Breakdown').textContent=breakdown;
     } else {
-      const cp = order.length>0 ? order[bf.currentThrowIdx%order.length] : null;
-      statusHtml = '<div class="bf-turn-badge">🎳 '+(cp?cp.trim():'–')+' ist dran</div>';
+        document.getElementById('top6Summary').style.display='none';
+    }
+}
+
+function makeResultTable(eligible, ow) {
+    let rank=0;
+    const makeRow=(p,forceOw)=>{
+        const isElig=!forceOw; if(isElig) rank++;
+        const top6=isElig&&rank<=6;
+        const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+        return `<tr class="result-row ${top6?'top6':''} ${!isElig?'ow':''}">
+            <td class="rank-cell">${isElig?medal:'—'}</td>
+            <td>${esc(p.name)}
+                ${!isElig?'<br><span class="badge badge-ow" style="font-size:.6rem">Ohne Wertung</span>':top6?'<br><span class="badge badge-top6" style="font-size:.6rem">Top 6 ✓</span>':''}
+                ${p.isDamen?'<br><span class="badge badge-damen" style="font-size:.6rem">♀</span>':''}
+            </td>
+            <td>${p.r1??'—'}</td><td>${p.r2??'—'}</td>
+            <td>${p.s3??'—'}</td><td>${p.fb??'—'}</td>
+            <td class="total-cell">${p.total??'—'}</td>
+        </tr>`;
+    };
+    const rows=[...eligible.map(p=>makeRow(p,false)),...ow.map(p=>makeRow(p,true))].join('');
+    return `<table><thead><tr><th>Pl.</th><th>Spieler</th><th>5i.V. R1</th><th>5i.V. R2</th><th>Schr.3</th><th>FB</th><th>Gesamt</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  STANDINGS VIEW (separate browser tab)
+// ══════════════════════════════════════════════════════
+function renderSV() {
+    const {eligible,ow}=buildData();
+    document.getElementById('svTeamName').textContent=S.teamName||'Kegelstadtmeisterschaft';
+    document.getElementById('svLastUpdate').textContent='Zuletzt: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    let html=''; let rank=0;
+    eligible.forEach(p=>{
+        rank++;
+        const top6=rank<=6, medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+        html+=`<div class="sv-row ${top6?'top6':''}">
+            <div class="sv-rank-num">${medal}</div>
+            <div style="flex:1"><div class="sv-player-name">${esc(p.name)}${p.isDamen?' ♀':''}</div>${top6?'<div class="sv-player-sub">Top 6 ✓</div>':''}</div>
+            <div class="sv-scores"><div class="sv-total">${p.total??'–'}</div>
+            <div class="sv-rounds">R1:${p.r1??'–'} · R2:${p.r2??'–'} · S3:${p.s3??'–'} · FB:${p.fb??'–'}</div></div>
+        </div>`;
+    });
+    if (ow.length) {
+        html+=`<div class="sv-sep">── Ohne Wertung ──</div>`;
+        ow.forEach(p=>{ html+=`<div class="sv-row ow"><div class="sv-rank-num" style="opacity:.4">—</div><div style="flex:1"><div class="sv-player-name">${esc(p.name)}</div><div class="sv-player-sub">Aufschreiber · Ohne Wertung</div></div><div class="sv-scores"><div class="sv-total" style="opacity:.5">${p.total??'–'}</div><div class="sv-rounds">R1:${p.r1??'–'} · R2:${p.r2??'–'} · S3:${p.s3??'–'} · FB:${p.fb??'–'}</div></div></div>`; });
+    }
+    if (!html) html='<p style="text-align:center;opacity:.4;padding:3rem;font-size:1.1rem">Noch keine Punkte …</p>';
+    document.getElementById('svBody').innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════════
+//  PDF EXPORT  (print-to-PDF window)
+// ══════════════════════════════════════════════════════
+function exportPdf(mode) {
+    const {eligible,ow}=buildData();
+    const date=new Date().toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const team=S.teamName||'Kegelstadtmeisterschaft';
+    const top6=eligible.slice(0,6);
+    const top6Total=top6.reduce((s,p)=>s+(p.total??0),0);
+
+    // ── Result table ──────────────────────────────────
+    let rank=0;
+    const resultRows=[...eligible.map(p=>{
+        rank++;
+        const isTop6=rank<=6;
+        const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank+'.';
+        return `<tr class="${isTop6?'top6':''}">
+            <td>${medal}</td>
+            <td>${esc(p.name)}${p.isDamen?' ♀':''}${isTop6?' ✓':''}</td>
+            <td>${p.r1??'—'}</td><td>${p.r2??'—'}</td>
+            <td>${p.s3??'—'}</td><td>${p.fb??'—'}</td>
+            <td class="bold">${p.total??'—'}</td></tr>`;
+    }),...ow.map(p=>`<tr class="ow">
+        <td>—</td>
+        <td>${esc(p.name)} <span class="sm">(Ohne Wertung)</span></td>
+        <td>${p.r1??'—'}</td><td>${p.r2??'—'}</td>
+        <td>${p.s3??'—'}</td><td>${p.fb??'—'}</td>
+        <td>${p.total??'—'}</td></tr>`)].join('');
+
+    // ── Top-6 box ─────────────────────────────────────
+    const top6Box=top6.length?`<div class="top6-box">
+        <div class="top6-label">🏆 Gesamtscore Top 6</div>
+        <div class="top6-total">${top6Total}</div>
+        <div class="top6-breakdown">${top6.map(p=>`${esc(p.name)}: ${p.total??0}`).join(' · ')}</div>
+    </div>`:'';
+
+    // ── Detail sections ───────────────────────────────
+    let detailHTML='';
+    if (mode==='detail') {
+        // 5 i.d.V. R1 + R2
+        [1,2].forEach(rnd=>{
+            const gk=rnd===1?'g1':'g2';
+            const pRows=S.players.map(p=>{
+                const sc=S.scores[gk][p.id]||[null,null,null,null,null];
+                const cells=sc.map(v=>v===10?'<span class="kranz">Kranz</span>':v===0?'<span class="pumpe">0</span>':v??'—').join('</td><td>');
+                const tot=sumArr(sc);
+                return `<tr><td>${esc(p.name)}${p.isAufschreiber?' <span class="sm">(AW)</span>':''}</td><td>${cells}</td><td class="bold">${tot??'—'}</td></tr>`;
+            }).join('');
+            detailHTML+=`<div class="section">
+                <h3>🎳 Fünf in die vollen – Runde ${rnd}</h3>
+                <table><thead><tr><th>Spieler</th><th>Wurf 1</th><th>Wurf 2</th><th>Wurf 3</th><th>Wurf 4</th><th>Wurf 5</th><th>Gesamt</th></tr></thead>
+                <tbody>${pRows}</tbody></table></div>`;
+        });
+
+        // Schräge 3
+        const s3Rows=S.players.map(p=>{
+            const rows=S.scores.s3[p.id]||[[],[],[],[],[]];
+            const cells=rows.map((knocked,i)=>{
+                const pts=knocked.filter(j=>S3_PATTERNS[i][j]).length;
+                return pts>0?pts:'—';
+            }).join('</td><td>');
+            const tot=getS3Total(p.id);
+            return `<tr><td>${esc(p.name)}${p.isAufschreiber?' <span class="sm">(AW)</span>':''}</td><td>${cells}</td><td class="bold">${tot??'—'}</td></tr>`;
+        }).join('');
+        detailHTML+=`<div class="section">
+            <h3>🎯 Schräge Drei</h3>
+            <table><thead><tr><th>Spieler</th><th>Bild 1</th><th>Bild 2</th><th>Bild 3</th><th>Bild 4</th><th>Bild 5</th><th>Gesamt</th></tr></thead>
+            <tbody>${s3Rows}</tbody></table></div>`;
+
+        // Fredenbaum
+        const fbHdr=FB_MULT.map((m,i)=>`<th>W${i+1}<br><small>×${m}</small></th>`).join('');
+        const fbRows=S.players.map(p=>{
+            const isDamen=p.isDamen, maxT=isDamen?4:10;
+            let cells='';
+            for(let t=0;t<10;t++){
+                if(t>=maxT){cells+=`<td class="na">—</td>`;continue;}
+                const knocked=S.scores.fb[p.id]?.[t]??[];
+                const pts=knocked.filter(i=>FB_PATTERNS[t][i]).length*FB_MULT[t];
+                cells+=`<td>${knocked.length>0?pts:'—'}</td>`;
+            }
+            const tot=getFbTotal(p.id);
+            return `<tr><td>${esc(p.name)}${isDamen?' ♀':''}${p.isAufschreiber?' <span class="sm">(AW)</span>':''}</td>${cells}<td class="bold">${tot??'—'}</td></tr>`;
+        }).join('');
+        detailHTML+=`<div class="section">
+            <h3>🌳 Fredenbaum</h3>
+            <table class="fb-tbl"><thead><tr><th>Spieler</th>${fbHdr}<th>Gesamt</th></tr></thead>
+            <tbody>${fbRows}</tbody></table></div>`;
     }
 
-    let numBtns = '';
-    for (let i=1; i<=9; i++) numBtns += '<button class="bf-num-btn" '+(bf.phase==='done'?'disabled':'')+' onclick="bfThrow('+i+')">'+i+'</button>';
+    // ── Assemble full HTML ────────────────────────────
+    const html=`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+<title>Harener Stadtmeisterschaft – ${mode==='detail'?'Detailbericht':'Ergebnis'}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#212121;padding:1.8cm 1.5cm;font-size:10pt;line-height:1.4}
+.hdr{text-align:center;margin-bottom:1.4rem;border-bottom:3px solid #1a237e;padding-bottom:.9rem}
+.hdr h1{font-size:1.75rem;font-weight:900;color:#1a237e}
+.hdr .meta{font-size:.82rem;color:#555;margin-top:.3rem}
+h2{font-size:1.05rem;font-weight:800;color:#1a237e;margin:1.2rem 0 .55rem}
+h3{font-size:.9rem;font-weight:800;color:#333;margin:1rem 0 .4rem;padding-left:.55rem;border-left:3px solid #3949ab}
+table{width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:.35rem}
+thead tr{background:#1a237e}
+th{color:white;padding:.32rem .38rem;text-align:center;font-weight:700;font-size:.69rem;white-space:nowrap}
+th:first-child{text-align:left;padding-left:.6rem}
+td{padding:.28rem .38rem;border-bottom:1px solid #e0e0e0;text-align:center;vertical-align:middle}
+td:first-child{text-align:left;padding-left:.6rem;font-weight:600}
+tr:nth-child(even) td{background:#f7f8ff}
+tr.top6 td{background:#e8f5e9!important}
+tr.top6 td:first-child{border-left:3px solid #2e7d32}
+tr.ow td{color:#aaa;background:#fafafa!important}
+.bold{font-weight:800;color:#1a237e}
+.sm{font-size:.65rem;font-weight:400;color:#888}
+.na{color:#ccc}
+.kranz{color:#e65100;font-weight:800;font-size:.75rem}
+.pumpe{color:#1565c0;font-weight:800}
+.section{page-break-inside:avoid;margin-top:.75rem}
+.fb-tbl th,.fb-tbl td{min-width:28px;font-size:.7rem}
+.top6-box{background:linear-gradient(135deg,#1a237e,#3949ab);color:white;border-radius:8px;padding:.7rem 1rem;margin-top:.9rem;page-break-inside:avoid}
+.top6-label{font-size:.65rem;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.4px}
+.top6-total{font-size:1.9rem;font-weight:900;line-height:1.15}
+.top6-breakdown{font-size:.67rem;opacity:.65;margin-top:.2rem;line-height:1.5}
+@media print{body{padding:0}@page{margin:1.5cm}button{display:none}}
+</style></head><body>
+<div class="hdr">
+  <h1>🎳 Harener Stadtmeisterschaft</h1>
+  <div class="meta">${esc(team)} &nbsp;·&nbsp; ${date}${mode==='detail'?' &nbsp;·&nbsp; Detailbericht':''}</div>
+</div>
+<h2>🏆 Gesamtergebnis</h2>
+<table>
+  <thead><tr><th>Pl.</th><th>Spieler</th><th>5i.V. R1</th><th>5i.V. R2</th><th>Schr.3</th><th>Fredenbaum</th><th>Gesamt</th></tr></thead>
+  <tbody>${resultRows}</tbody>
+</table>
+${top6Box}
+${detailHTML}
+<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));<\/script>
+</body></html>`;
 
-    const lastLog = bf.log.length>0 ? '<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 2px;">'+bf.log[bf.log.length-1]+'</div>' : '';
-
-    bodyHtml = statusHtml+busCards+'<div class="bf-numpad">'+numBtns+'</div>'+lastLog;
-  }
-
-  return `<div class="spiel-card">
-    <div class="spiel-header" onclick="toggleBusfahren()">
-      <div><div class="spiel-title">🚌 Busfahren</div><div class="spiel-meta">Alle Spieler · Reihum · Erster Bus mit 6 Reifen gewinnt</div></div>
-      <span class="spiel-chevron${bf.open?' open':''}">&#8964;</span>
-    </div>
-    <div class="spiel-body${bf.open?' open':''}">
-      <div class="spiel-desc">Runde 1 — Busbesetzung: Jeder wirft einmal, die Zahl bestimmt seine Busnummer (mehrere können im selben Bus sein). Danach: egal wer die Zahl wirft — der dazugehörige Bus bekommt einen <strong>Reifen</strong>. Wer zuerst <strong>6 Reifen</strong> hat, gewinnt!</div>
-      ${bodyHtml}
-      <div class="spiel-actions">
-        <button class="btn btn-danger" onclick="bfReset()">Zurücksetzen</button>
-      </div>
-    </div>
-  </div>`;
+    const w=window.open('','_blank','width=900,height=720');
+    if(!w){toast('⚠️ Bitte Pop-ups erlauben'); return;}
+    w.document.open(); w.document.write(html); w.document.close();
 }
 
-function toggleBusfahren() { state.busfahren.open=!state.busfahren.open; renderSpiele(); }
-
-function bfSetOrder(name) {
-  const bf = state.busfahren;
-  const idx = bf.playerOrder.indexOf(name);
-  if (idx !== -1) bf.playerOrder.splice(idx, 1);
-  else bf.playerOrder.push(name);
-  renderSpiele();
+// ══════════════════════════════════════════════════════
+//  COPY RESULTS
+// ══════════════════════════════════════════════════════
+function copyResults() {
+    const {eligible,ow}=buildData();
+    let txt=`🎳 Harener Stadtmeisterschaft\nMannschaft: ${S.teamName||'–'}\n${'─'.repeat(52)}\n`;
+    txt+=`${'Pl'.padEnd(3)} ${'Name'.padEnd(20)} ${'R1'.padStart(4)} ${'R2'.padStart(4)} ${'S3'.padStart(4)} ${'FB'.padStart(5)} ${'Ges'.padStart(6)}\n${'─'.repeat(52)}\n`;
+    eligible.forEach((p,i)=>{ const m=i<6?'✓':' '; txt+=`${m}${(i+1+'.').padEnd(3)} ${p.name.padEnd(20)} ${String(p.r1??'–').padStart(4)} ${String(p.r2??'–').padStart(4)} ${String(p.s3??'–').padStart(4)} ${String(p.fb??'–').padStart(5)} ${String(p.total??'–').padStart(6)}\n`; });
+    if (ow.length) { txt+=`\nOhne Wertung:\n`; ow.forEach(p=>{ txt+=`  ${p.name}  R1:${p.r1??'–'} R2:${p.r2??'–'} S3:${p.s3??'–'} FB:${p.fb??'–'} Ges:${p.total??'–'}\n`; }); }
+    navigator.clipboard.writeText(txt).then(()=>toast('✓ In Zwischenablage kopiert')).catch(()=>prompt('Ergebnis:',txt));
 }
 
-function bfRandomOrder() {
-  const bf = state.busfahren;
-  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
-  bf.playerOrder = [...aktiv].sort(() => Math.random() - 0.5);
-  bf.phase = 'assignment'; bf.currentAssignIdx = 0;
-  renderSpiele();
+// ══════════════════════════════════════════════════════
+//  RESET
+// ══════════════════════════════════════════════════════
+function resetAll() {
+    if (!confirm('Wirklich neues Spiel starten?\nAlle Punkte werden gelöscht.')) return;
+    localStorage.removeItem(smKey());
+    S={teamName:'',players:[],nextId:1,scores:{g1:{},g2:{},s3:{},fb:{}},activeTab:'mannschaft',s3PicIdx:0,fbThrowIdx:0};
+    // Re-initialise with preset players if applicable
+    if (currentTeam !== 'custom') {
+        const preset = PRESET_TEAMS[currentTeam];
+        S.teamName = preset.name;
+        preset.players.forEach(name => {
+            const id = S.nextId++;
+            S.players.push({ id, name, isAufschreiber:false, isDamen:false });
+            S.scores.g1[id]=[null,null,null,null,null];
+            S.scores.g2[id]=[null,null,null,null,null];
+            S.scores.s3[id]=[[],[],[],[],[]];
+            S.scores.fb[id]=Array(10).fill(null).map(()=>[]);
+        });
+        save();
+    }
+    document.getElementById('teamNameInput').value = S.teamName;
+    document.getElementById('playerInput').value='';
+    document.getElementById('teamLabel').textContent = S.teamName || 'Mannschaft erfassen';
+    renderPlayers(); switchTab('mannschaft');
 }
 
-function bfConfirmOrder() {
-  const bf = state.busfahren;
-  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
-  if (bf.playerOrder.length < aktiv.length) return;
-  bf.phase = 'assignment'; bf.currentAssignIdx = 0;
-  renderSpiele();
-}
-
-function bfResetOrder() { state.busfahren.playerOrder = []; renderSpiele(); }
-
-function bfAssign(num) {
-  const bf = state.busfahren;
-  const order = bf.playerOrder;
-  const player = order[bf.currentAssignIdx];
-  if (!player) return;
-  bf.assignments[player] = num;
-  if (!bf.buses[num]) bf.buses[num] = {tires:0, players:[]};
-  bf.buses[num].players.push(player);
-  bf.currentAssignIdx++;
-  if (bf.currentAssignIdx >= order.length) { bf.phase='game'; bf.currentThrowIdx=0; }
-  renderSpiele();
-}
-
-function bfThrow(num) {
-  const bf = state.busfahren;
-  if (bf.phase !== 'game') return;
-  const order = bf.playerOrder;
-  if (!order.length) return;
-  const player = order[bf.currentThrowIdx % order.length];
-  let msg = '';
-  if (bf.buses[num] !== undefined) {
-    bf.buses[num].tires++;
-    msg = player.trim()+' wirft '+num+' → Bus '+num+': '+bf.buses[num].tires+'/6 Reifen';
-    if (bf.buses[num].tires >= 6) { bf.winner=num; bf.phase='done'; applyGamePenalty(); }
-  } else {
-    msg = player.trim()+' wirft '+num+' — kein Bus '+num;
-  }
-  bf.log.push(msg); if (bf.log.length>5) bf.log.shift();
-  if (bf.phase==='game') bf.currentThrowIdx++;
-  renderSpiele();
-}
-
-function bfReset() {
-  const bf = state.busfahren;
-  bf.phase='order'; bf.playerOrder=[]; bf.assignments={}; bf.currentAssignIdx=0;
-  bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
-  renderSpiele();
-}
-
-// ── Club selection ────────────────────────────────────────────
-function resetAllGames() {
-  state.spiele.forEach(g=>{g.scores={};g.showResult=false;});
-  const tb=state.tannenbaum; tb.tree1=new Array(25).fill(false); tb.tree2=new Array(25).fill(false); tb.team1=[]; tb.team2=[];
-  const ab=state.abräumen; ab.teams=[{throws:0,first:false,done:false},{throws:0,first:false,done:false}]; ab.team1=[]; ab.team2=[];
-  const b=state.bis100; b.teams=[{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''},{score:0,throwsSinceReset:0,totalThrows:0,won:false,flashMsg:''}]; b.team1=[]; b.team2=[];
-  state.blackjack.players={}; state.blackjack.showResult=false;
-  state.tagnacht.scores={}; state.tagnacht.showResult=false;
-  state.bergtal.scores={}; state.bergtal.showResult=false;
-  state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[];
-  const vg=state.vierGewinnt; vg.board=Array.from({length:9},()=>new Array(9).fill(null)); vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null; vg.team1=[]; vg.team2=[];
-  const bf=state.busfahren; bf.phase='order'; bf.playerOrder=[]; bf.assignments={}; bf.currentAssignIdx=0; bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
-}
-
-function selectClub(id) {
-  const club=CLUBS[id];
-  state.selectedClub=id; state.spieler=[...club.members]; state.anwesend=[...club.members];
-  resetAllGames();
-  const nameEl=document.getElementById('topbar-club-name');
-  if(nameEl) nameEl.textContent=club.name;
-  document.getElementById('topbar-logo-bb').style.display=id==='bb'?'flex':'none';
-  document.getElementById('topbar-logo-hb').style.display=id==='hb'?'flex':'none';
-  document.getElementById('topbar-logo-custom').style.display=id==='custom'?'flex':'none';
-  document.getElementById('club-selector').style.display='none';
-  document.getElementById('presence-panel').style.display='';
-  renderAll();
-}
-function switchClub() {
-  backToClubs();
-  document.getElementById('club-selector').style.display='flex';
-}
-
-// ── Custom team ───────────────────────────────────────────────
-let customMembers = [];
-
-function showCustomTeamForm() {
-  document.getElementById('club-cards-view').style.display='none';
-  document.getElementById('custom-team-view').style.display='flex';
-  customMembers=[];
-  document.getElementById('ct-name-inp').value='';
-  document.getElementById('ct-member-inp').value='';
-  renderCustomMembers();
-  setTimeout(()=>document.getElementById('ct-name-inp').focus(),100);
-}
-
-function backToClubs() {
-  document.getElementById('custom-team-view').style.display='none';
-  document.getElementById('club-cards-view').style.display='flex';
-}
-
-function addCustomMember() {
-  const inp=document.getElementById('ct-member-inp');
-  const name=inp.value.trim();
-  if(!name||customMembers.includes(name)){inp.focus();return;}
-  customMembers.push(name);
-  inp.value='';
-  renderCustomMembers();
-  inp.focus();
-}
-
-function removeCustomMember(i) {
-  customMembers.splice(i,1);
-  renderCustomMembers();
-}
-
-function renderCustomMembers() {
-  const list=document.getElementById('ct-member-list');
-  if(!list) return;
-  if(customMembers.length===0){
-    list.innerHTML='<div class="ct-empty">Noch keine Spieler hinzugefügt</div>';
-  } else {
-    list.innerHTML=customMembers.map((name,i)=>`<div class="ct-member-item">
-      <div class="avatar" style="background:${avatarColor(name)}">${initials(name)}</div>
-      <span class="ct-member-name">${name}</span>
-      <button class="ct-member-del" onclick="removeCustomMember(${i})">✕</button>
-    </div>`).join('');
-  }
-  const btn=document.getElementById('ct-start-btn');
-  if(btn) btn.disabled=customMembers.length<2;
-}
-
-function confirmCustomTeam() {
-  if(customMembers.length<2) return;
-  const teamName=document.getElementById('ct-name-inp').value.trim()||'Mein Team';
-  CLUBS['custom']={id:'custom',name:teamName,color:'#7c4daa',members:[...customMembers]};
-  selectClub('custom');
-}
-function confirmReset() {
-  if(confirm('Alle Spiele zurücksetzen?')) { resetAllGames(); renderAll(); }
-}
-
-function showClubSelector() {
-  document.getElementById('front-page').style.display='none';
-  document.getElementById('club-selector').style.display='flex';
-}
-
-// Show front page on load
-document.getElementById('front-page').style.display='flex';
-
-// Register service worker
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+// ══════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 </script>
 </body>
 </html>
