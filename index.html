@@ -499,7 +499,7 @@ let state = {
   bergtal: { open:false, loserCount:1, showResult:false, scores:{} },
   madn: { open:false, order:[], scores:{}, currentTurn:0, winner:null, lastReset:[] },
   vierGewinnt: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], currentTeam:0, board:Array.from({length:9},()=>new Array(9).fill(null)), winner:null, winCells:[], lastDrop:null },
-  busfahren: { open:false, phase:'assignment', assignments:{}, currentAssignIdx:0, buses:{}, currentThrowIdx:0, winner:null, log:[] },
+  busfahren: { open:false, phase:'order', playerOrder:[], assignments:{}, currentAssignIdx:0, buses:{}, currentThrowIdx:0, winner:null, log:[] },
 };
 
 function applyGamePenalty() { /* Keine Strafen — no-op */ }
@@ -1520,15 +1520,41 @@ function renderBusfahrenCard() {
   const bf = state.busfahren;
   const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
   const bfc = n => BF_COLORS[n] || '#888';
+  const order = bf.playerOrder.length > 0 ? bf.playerOrder : aktiv;
 
   let bodyHtml = '';
 
-  if (bf.phase === 'assignment') {
-    const currentPlayer = aktiv[bf.currentAssignIdx];
+  // ── Phase 0: Reihenfolge festlegen ──────────────────────────
+  if (bf.phase === 'order') {
+    const chips = aktiv.map(p => {
+      const pos = bf.playerOrder.indexOf(p);
+      const sel = pos !== -1;
+      return '<div onclick="bfSetOrder(\''+esc(p)+'\')" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px 9px 9px;border-radius:24px;cursor:pointer;border:2px solid '+(sel?'#1a1a1a':'#d0cdc5')+';background:'+(sel?'#1a1a1a':'#fff')+';color:'+(sel?'#fff':'#1a1a1a')+';font-size:14px;font-weight:600;user-select:none;transition:all 0.1s;">'
+        +(sel
+          ? '<span style="width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">'+(pos+1)+'</span>'
+          : '<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>')
+        +p.trim()+'</div>';
+    }).join('');
+
+    const allOrdered = bf.playerOrder.length === aktiv.length;
+    const resetLink = bf.playerOrder.length > 0
+      ? '<button style="background:none;border:none;color:#c0392b;font-size:13px;cursor:pointer;padding:2px 0 14px;" onclick="bfResetOrder()">✕ Reihenfolge zurücksetzen</button>'
+      : '';
+
+    bodyHtml = '<button class="btn btn-primary" style="width:100%;height:48px;font-size:15px;margin-bottom:10px;" onclick="bfRandomOrder()">🎲 Zufällige Reihenfolge</button>'
+      +'<div style="text-align:center;font-size:12px;color:#aaa;margin-bottom:12px;">— oder manuell antippen —</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;">'+chips+'</div>'
+      +resetLink
+      +'<button class="btn btn-primary" style="width:100%;height:48px;font-size:15px;" onclick="bfConfirmOrder()" '+(allOrdered?'':'disabled')+'>Los geht\'s →</button>'
+      +(bf.playerOrder.length > 0 && !allOrdered ? '<div style="font-size:12px;color:#bbb;text-align:center;margin-top:8px;">'+bf.playerOrder.length+' von '+aktiv.length+' ausgewählt</div>' : '');
+
+  // ── Phase 1: Busbesetzung ────────────────────────────────────
+  } else if (bf.phase === 'assignment') {
+    const currentPlayer = order[bf.currentAssignIdx];
 
     let assignedHtml = '';
-    for (let i=0; i<bf.currentAssignIdx && i<aktiv.length; i++) {
-      const p = aktiv[i], bn = bf.assignments[p], c = bfc(bn);
+    for (let i=0; i<bf.currentAssignIdx && i<order.length; i++) {
+      const p = order[i], bn = bf.assignments[p], c = bfc(bn);
       assignedHtml += '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8;">'
         +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'
         +'<span style="flex:1;font-size:13px;font-weight:600;">'+p.trim()+'</span>'
@@ -1546,7 +1572,9 @@ function renderBusfahrenCard() {
       +(assignedHtml?'<div style="margin-bottom:12px;">'+assignedHtml+'</div>':'')
       +'<div class="bf-numpad">'+numBtns+'</div>'
       +'<button class="bf-pumpe-btn" onclick="bfAssign(0)" '+(!currentPlayer?'disabled':'')+'>💨 Pumpe (0) → Bus 0</button>'
-      +'<div style="font-size:12px;color:#bbb;text-align:center;">'+bf.currentAssignIdx+' von '+aktiv.length+' zugewiesen</div>';
+      +'<div style="font-size:12px;color:#bbb;text-align:center;">'+bf.currentAssignIdx+' von '+order.length+' zugewiesen</div>';
+
+  // ── Phase 2+3: Spiel / Fertig ────────────────────────────────
   } else {
     const busNums = Object.keys(bf.buses).map(Number).sort((a,b)=>a-b);
 
@@ -1575,7 +1603,7 @@ function renderBusfahrenCard() {
       const wn=bf.winner, wp=(bf.buses[wn]?.players||[]).join(', ');
       statusHtml = '<div class="bf-winner-banner">🏆 Bus '+wn+' gewinnt!'+(wp?' · '+wp:'')+'</div>';
     } else {
-      const cp = aktiv.length>0 ? aktiv[bf.currentThrowIdx%aktiv.length] : null;
+      const cp = order.length>0 ? order[bf.currentThrowIdx%order.length] : null;
       statusHtml = '<div class="bf-turn-badge">🎳 '+(cp?cp.trim():'–')+' ist dran</div>';
     }
 
@@ -1605,41 +1633,67 @@ function renderBusfahrenCard() {
 
 function toggleBusfahren() { state.busfahren.open=!state.busfahren.open; renderSpiele(); }
 
+function bfSetOrder(name) {
+  const bf = state.busfahren;
+  const idx = bf.playerOrder.indexOf(name);
+  if (idx !== -1) bf.playerOrder.splice(idx, 1);
+  else bf.playerOrder.push(name);
+  renderSpiele();
+}
+
+function bfRandomOrder() {
+  const bf = state.busfahren;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  bf.playerOrder = [...aktiv].sort(() => Math.random() - 0.5);
+  bf.phase = 'assignment'; bf.currentAssignIdx = 0;
+  renderSpiele();
+}
+
+function bfConfirmOrder() {
+  const bf = state.busfahren;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  if (bf.playerOrder.length < aktiv.length) return;
+  bf.phase = 'assignment'; bf.currentAssignIdx = 0;
+  renderSpiele();
+}
+
+function bfResetOrder() { state.busfahren.playerOrder = []; renderSpiele(); }
+
 function bfAssign(num) {
-  const bf=state.busfahren;
-  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
-  const player=aktiv[bf.currentAssignIdx];
-  if(!player) return;
-  bf.assignments[player]=num;
-  if(!bf.buses[num]) bf.buses[num]={tires:0,players:[]};
+  const bf = state.busfahren;
+  const order = bf.playerOrder;
+  const player = order[bf.currentAssignIdx];
+  if (!player) return;
+  bf.assignments[player] = num;
+  if (!bf.buses[num]) bf.buses[num] = {tires:0, players:[]};
   bf.buses[num].players.push(player);
   bf.currentAssignIdx++;
-  if(bf.currentAssignIdx>=aktiv.length){bf.phase='game';bf.currentThrowIdx=0;}
+  if (bf.currentAssignIdx >= order.length) { bf.phase='game'; bf.currentThrowIdx=0; }
   renderSpiele();
 }
 
 function bfThrow(num) {
-  const bf=state.busfahren;
-  if(bf.phase!=='game') return;
-  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
-  if(!aktiv.length) return;
-  const player=aktiv[bf.currentThrowIdx%aktiv.length];
-  let msg='';
-  if(bf.buses[num]!==undefined){
+  const bf = state.busfahren;
+  if (bf.phase !== 'game') return;
+  const order = bf.playerOrder;
+  if (!order.length) return;
+  const player = order[bf.currentThrowIdx % order.length];
+  let msg = '';
+  if (bf.buses[num] !== undefined) {
     bf.buses[num].tires++;
-    msg=player.trim()+' wirft '+num+' → Bus '+num+': '+bf.buses[num].tires+'/6 Reifen';
-    if(bf.buses[num].tires>=6){bf.winner=num;bf.phase='done';applyGamePenalty();}
+    msg = player.trim()+' wirft '+num+' → Bus '+num+': '+bf.buses[num].tires+'/6 Reifen';
+    if (bf.buses[num].tires >= 6) { bf.winner=num; bf.phase='done'; applyGamePenalty(); }
   } else {
-    msg=player.trim()+' wirft '+num+' — kein Bus '+num;
+    msg = player.trim()+' wirft '+num+' — kein Bus '+num;
   }
-  bf.log.push(msg); if(bf.log.length>5) bf.log.shift();
-  if(bf.phase==='game') bf.currentThrowIdx++;
+  bf.log.push(msg); if (bf.log.length>5) bf.log.shift();
+  if (bf.phase==='game') bf.currentThrowIdx++;
   renderSpiele();
 }
 
 function bfReset() {
-  const bf=state.busfahren;
-  bf.phase='assignment'; bf.assignments={}; bf.currentAssignIdx=0;
+  const bf = state.busfahren;
+  bf.phase='order'; bf.playerOrder=[]; bf.assignments={}; bf.currentAssignIdx=0;
   bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
   renderSpiele();
 }
@@ -1655,7 +1709,7 @@ function resetAllGames() {
   state.bergtal.scores={}; state.bergtal.showResult=false;
   state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[];
   const vg=state.vierGewinnt; vg.board=Array.from({length:9},()=>new Array(9).fill(null)); vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null; vg.team1=[]; vg.team2=[];
-  const bf=state.busfahren; bf.phase='assignment'; bf.assignments={}; bf.currentAssignIdx=0; bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
+  const bf=state.busfahren; bf.phase='order'; bf.playerOrder=[]; bf.assignments={}; bf.currentAssignIdx=0; bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
 }
 
 function selectClub(id) {
