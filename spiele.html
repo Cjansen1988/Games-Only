@@ -348,6 +348,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </style>
 </head>
 <body>
+<!-- Front-page is hidden by default; only shown if app is opened standalone (without team param) -->
+<script>document.documentElement.style.visibility='hidden';</script>
 
 <div id="front-page" class="fp-overlay">
   <div class="fp-hero">
@@ -1810,27 +1812,28 @@ function goToTeamSelect() {
   const params = new URLSearchParams(window.location.search);
   const club = params.get('club');
 
+  // Always hide front-page and club-selector first
+  document.getElementById('front-page').style.display = 'none';
+  document.getElementById('club-selector').style.display = 'none';
+
   if (club === 'custom') {
-    // Build CLUBS['custom'] from localStorage data set by index.html
     const raw = localStorage.getItem('kegel_custom_team');
     if (raw) {
       const d = JSON.parse(raw);
       CLUBS['custom'] = { id:'custom', name: d.name||'Neues Team', color:'#7c4daa', members: [...(d.members||[])] };
-      document.getElementById('front-page').style.display = 'none';
-      document.getElementById('club-selector').style.display = 'none';
       selectClub('custom');
     } else {
-      window.location.href = 'index.html';
+      window.location.href = 'index.html'; return;
     }
   } else if (club && CLUBS[club]) {
-    // Preset club (bb / hb)
-    document.getElementById('front-page').style.display = 'none';
-    document.getElementById('club-selector').style.display = 'none';
     selectClub(club);
   } else {
     // No valid param — redirect back to start
-    window.location.href = 'index.html';
+    window.location.href = 'index.html'; return;
   }
+
+  // Show page only after club is selected
+  document.documentElement.style.visibility = 'visible';
 })();
 
 // Register service worker
