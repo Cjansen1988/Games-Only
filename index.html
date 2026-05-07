@@ -1571,7 +1571,6 @@ function renderBusfahrenCard() {
       +'</div>'
       +(assignedHtml?'<div style="margin-bottom:12px;">'+assignedHtml+'</div>':'')
       +'<div class="bf-numpad">'+numBtns+'</div>'
-      +'<button class="bf-pumpe-btn" onclick="bfAssign(0)" '+(!currentPlayer?'disabled':'')+'>💨 Pumpe (0) → Bus 0</button>'
       +'<div style="font-size:12px;color:#bbb;text-align:center;">'+bf.currentAssignIdx+' von '+order.length+' zugewiesen</div>';
 
   // ── Phase 2+3: Spiel / Fertig ────────────────────────────────
@@ -1612,8 +1611,7 @@ function renderBusfahrenCard() {
 
     const lastLog = bf.log.length>0 ? '<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 2px;">'+bf.log[bf.log.length-1]+'</div>' : '';
 
-    bodyHtml = statusHtml+busCards+'<div class="bf-numpad">'+numBtns+'</div>'
-      +'<button class="bf-pumpe-btn" '+(bf.phase==='done'?'disabled':'')+' onclick="bfThrow(0)">💨 Pumpe</button>'+lastLog;
+    bodyHtml = statusHtml+busCards+'<div class="bf-numpad">'+numBtns+'</div>'+lastLog;
   }
 
   return `<div class="spiel-card">
