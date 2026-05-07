@@ -334,6 +334,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .vg-turn-badge.t1 { background: #dceeff; color: #1a6bc0; }
 .vg-turn-badge.t2 { background: #ffdddd; color: #c01a1a; }
 .vg-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 15px; font-weight: 600; }
+
+/* Busfahren */
+.bf-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 8px; }
+.bf-num-btn { height: 52px; border-radius: 10px; border: 1.5px solid #d0cdc5; background: #fff; font-size: 22px; font-weight: 800; cursor: pointer; color: #1a1a1a; }
+.bf-num-btn:active { background: #1a1a1a; color: #fff; transform: scale(0.93); }
+.bf-num-btn:disabled { opacity: 0.3; pointer-events: none; }
+.bf-pumpe-btn { width: 100%; height: 46px; border-radius: 10px; border: 1.5px solid #e0a0a0; background: #fff8f8; color: #c0392b; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+.bf-pumpe-btn:active { background: #fde8e8; }
+.bf-pumpe-btn:disabled { opacity: 0.3; pointer-events: none; }
+.bf-turn-badge { text-align: center; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; background: #f0ede8; color: #1a1a1a; }
+.bf-winner-banner { background: #1a1a1a; color: #fff; text-align: center; border-radius: 10px; padding: 14px; margin-bottom: 14px; font-size: 16px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -488,6 +499,7 @@ let state = {
   bergtal: { open:false, loserCount:1, showResult:false, scores:{} },
   madn: { open:false, order:[], scores:{}, currentTurn:0, winner:null, lastReset:[] },
   vierGewinnt: { open:false, teamName1:'Team 1', teamName2:'Team 2', team1:[], team2:[], currentTeam:0, board:Array.from({length:9},()=>new Array(9).fill(null)), winner:null, winCells:[], lastDrop:null },
+  busfahren: { open:false, phase:'assignment', assignments:{}, currentAssignIdx:0, buses:{}, currentThrowIdx:0, winner:null, log:[] },
 };
 
 function applyGamePenalty() { /* Keine Strafen — no-op */ }
@@ -599,6 +611,7 @@ function renderSpiele() {
   html += renderBergTalCard();
   html += renderMadnCard();
   html += renderVierGewinntCard();
+  html += renderBusfahrenCard();
   c.innerHTML = html;
 }
 
@@ -1500,6 +1513,137 @@ function vgReset() {
   renderSpiele();
 }
 
+// ── Busfahren ─────────────────────────────────────────────────
+const BF_COLORS = ['#888','#e74c3c','#e67e22','#c9a227','#27ae60','#16a085','#2980b9','#8e44ad','#e91e8c','#2c3e50'];
+
+function renderBusfahrenCard() {
+  const bf = state.busfahren;
+  const aktiv = state.spieler.filter(s => state.anwesend.includes(s));
+  const bfc = n => BF_COLORS[n] || '#888';
+
+  let bodyHtml = '';
+
+  if (bf.phase === 'assignment') {
+    const currentPlayer = aktiv[bf.currentAssignIdx];
+
+    let assignedHtml = '';
+    for (let i=0; i<bf.currentAssignIdx && i<aktiv.length; i++) {
+      const p = aktiv[i], bn = bf.assignments[p], c = bfc(bn);
+      assignedHtml += '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8;">'
+        +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'
+        +'<span style="flex:1;font-size:13px;font-weight:600;">'+p.trim()+'</span>'
+        +'<span style="font-size:12px;font-weight:700;background:'+c+';color:#fff;padding:3px 10px;border-radius:8px;">🚌 Bus '+bn+'</span>'
+        +'</div>';
+    }
+
+    let numBtns = '';
+    for (let i=1; i<=9; i++) numBtns += '<button class="bf-num-btn" onclick="bfAssign('+i+')" '+(!currentPlayer?'disabled':'')+'>'+i+'</button>';
+
+    bodyHtml = '<div style="background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:center;">'
+      +'<div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">'+(currentPlayer?currentPlayer.trim():'Alle zugewiesen')+'</div>'
+      +'<div style="font-size:13px;color:#888;">'+(currentPlayer?'würfelt jetzt — Zahl = Busnummer':'Zuweisung abgeschlossen')+'</div>'
+      +'</div>'
+      +(assignedHtml?'<div style="margin-bottom:12px;">'+assignedHtml+'</div>':'')
+      +'<div class="bf-numpad">'+numBtns+'</div>'
+      +'<button class="bf-pumpe-btn" onclick="bfAssign(0)" '+(!currentPlayer?'disabled':'')+'>💨 Pumpe (0) → Bus 0</button>'
+      +'<div style="font-size:12px;color:#bbb;text-align:center;">'+bf.currentAssignIdx+' von '+aktiv.length+' zugewiesen</div>';
+  } else {
+    const busNums = Object.keys(bf.buses).map(Number).sort((a,b)=>a-b);
+
+    let busCards = '';
+    for (const bn of busNums) {
+      const bus = bf.buses[bn], c = bfc(bn), isWin = bf.winner===bn;
+      let tires = '';
+      for (let i=0; i<6; i++) tires += '<div style="width:28px;height:28px;border-radius:50%;border:2.5px solid '+c+';background:'+(i<bus.tires?c:'transparent')+';opacity:'+(i<bus.tires?'1':'0.25')+';flex-shrink:0;"></div>';
+      const chips = bus.players.map(p=>
+        '<span class="tanne-player-chip" style="background:'+c+'20;border-color:'+c+'55;color:#222;">'
+        +'<div class="avatar" style="background:'+avatarColor(p)+'">'+initials(p)+'</div>'+p.trim()+'</span>'
+      ).join('');
+      busCards += '<div style="border-radius:12px;border:2px solid '+c+';background:'+(isWin?c+'18':'#fff')+';padding:12px 14px;margin-bottom:8px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +'<div style="width:44px;height:44px;border-radius:10px;background:'+c+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0;">'+bn+'</div>'
+        +'<div style="flex:1;"><div style="font-size:15px;font-weight:700;color:'+c+';">Bus '+bn+(isWin?' 🏆':'')+'</div>'
+        +'<div style="font-size:12px;color:#888;">'+bus.tires+' / 6 Reifen</div></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:5px;margin-bottom:8px;">'+tires+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+chips+'</div>'
+        +'</div>';
+    }
+
+    let statusHtml = '';
+    if (bf.phase==='done') {
+      const wn=bf.winner, wp=(bf.buses[wn]?.players||[]).join(', ');
+      statusHtml = '<div class="bf-winner-banner">🏆 Bus '+wn+' gewinnt!'+(wp?' · '+wp:'')+'</div>';
+    } else {
+      const cp = aktiv.length>0 ? aktiv[bf.currentThrowIdx%aktiv.length] : null;
+      statusHtml = '<div class="bf-turn-badge">🎳 '+(cp?cp.trim():'–')+' ist dran</div>';
+    }
+
+    let numBtns = '';
+    for (let i=1; i<=9; i++) numBtns += '<button class="bf-num-btn" '+(bf.phase==='done'?'disabled':'')+' onclick="bfThrow('+i+')">'+i+'</button>';
+
+    const lastLog = bf.log.length>0 ? '<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 2px;">'+bf.log[bf.log.length-1]+'</div>' : '';
+
+    bodyHtml = statusHtml+busCards+'<div class="bf-numpad">'+numBtns+'</div>'
+      +'<button class="bf-pumpe-btn" '+(bf.phase==='done'?'disabled':'')+' onclick="bfThrow(0)">💨 Pumpe</button>'+lastLog;
+  }
+
+  return `<div class="spiel-card">
+    <div class="spiel-header" onclick="toggleBusfahren()">
+      <div><div class="spiel-title">🚌 Busfahren</div><div class="spiel-meta">Alle Spieler · Reihum · Erster Bus mit 6 Reifen gewinnt</div></div>
+      <span class="spiel-chevron${bf.open?' open':''}">&#8964;</span>
+    </div>
+    <div class="spiel-body${bf.open?' open':''}">
+      <div class="spiel-desc">Runde 1 — Busbesetzung: Jeder wirft einmal, die Zahl bestimmt seine Busnummer (mehrere können im selben Bus sein). Danach: egal wer die Zahl wirft — der dazugehörige Bus bekommt einen <strong>Reifen</strong>. Wer zuerst <strong>6 Reifen</strong> hat, gewinnt!</div>
+      ${bodyHtml}
+      <div class="spiel-actions">
+        <button class="btn btn-danger" onclick="bfReset()">Zurücksetzen</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleBusfahren() { state.busfahren.open=!state.busfahren.open; renderSpiele(); }
+
+function bfAssign(num) {
+  const bf=state.busfahren;
+  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
+  const player=aktiv[bf.currentAssignIdx];
+  if(!player) return;
+  bf.assignments[player]=num;
+  if(!bf.buses[num]) bf.buses[num]={tires:0,players:[]};
+  bf.buses[num].players.push(player);
+  bf.currentAssignIdx++;
+  if(bf.currentAssignIdx>=aktiv.length){bf.phase='game';bf.currentThrowIdx=0;}
+  renderSpiele();
+}
+
+function bfThrow(num) {
+  const bf=state.busfahren;
+  if(bf.phase!=='game') return;
+  const aktiv=state.spieler.filter(s=>state.anwesend.includes(s));
+  if(!aktiv.length) return;
+  const player=aktiv[bf.currentThrowIdx%aktiv.length];
+  let msg='';
+  if(bf.buses[num]!==undefined){
+    bf.buses[num].tires++;
+    msg=player.trim()+' wirft '+num+' → Bus '+num+': '+bf.buses[num].tires+'/6 Reifen';
+    if(bf.buses[num].tires>=6){bf.winner=num;bf.phase='done';applyGamePenalty();}
+  } else {
+    msg=player.trim()+' wirft '+num+' — kein Bus '+num;
+  }
+  bf.log.push(msg); if(bf.log.length>5) bf.log.shift();
+  if(bf.phase==='game') bf.currentThrowIdx++;
+  renderSpiele();
+}
+
+function bfReset() {
+  const bf=state.busfahren;
+  bf.phase='assignment'; bf.assignments={}; bf.currentAssignIdx=0;
+  bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
+  renderSpiele();
+}
+
 // ── Club selection ────────────────────────────────────────────
 function resetAllGames() {
   state.spiele.forEach(g=>{g.scores={};g.showResult=false;});
@@ -1511,6 +1655,7 @@ function resetAllGames() {
   state.bergtal.scores={}; state.bergtal.showResult=false;
   state.madn.order=[]; state.madn.scores={}; state.madn.currentTurn=0; state.madn.winner=null; state.madn.lastReset=[];
   const vg=state.vierGewinnt; vg.board=Array.from({length:9},()=>new Array(9).fill(null)); vg.currentTeam=0; vg.winner=null; vg.winCells=[]; vg.lastDrop=null; vg.team1=[]; vg.team2=[];
+  const bf=state.busfahren; bf.phase='assignment'; bf.assignments={}; bf.currentAssignIdx=0; bf.buses={}; bf.currentThrowIdx=0; bf.winner=null; bf.log=[];
 }
 
 function selectClub(id) {
