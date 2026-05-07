@@ -298,6 +298,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .ct-footer { display: flex; gap: 8px; }
 .ct-footer .btn { flex: 1; height: 48px; font-size: 15px; }
 
+/* Front Page */
+.fp-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000; background: #f5f4f0; display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 0; overflow-y: auto; }
+.fp-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px 24px; text-align: center; }
+.fp-ball { font-size: 72px; line-height: 1; margin-bottom: 20px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.13)); }
+.fp-title { font-size: 30px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; margin-bottom: 8px; }
+.fp-sub { font-size: 15px; color: #888; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 28px; }
+.fp-desc { font-size: 16px; color: #444; line-height: 1.65; max-width: 340px; }
+.fp-features { width: 100%; max-width: 400px; padding: 0 24px 0; display: flex; flex-direction: column; gap: 12px; }
+.fp-feature { display: flex; align-items: flex-start; gap: 14px; background: #fff; border-radius: 14px; border: 1px solid #e8e5de; padding: 14px 16px; }
+.fp-feature-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+.fp-feature-text { display: flex; flex-direction: column; gap: 2px; }
+.fp-feature-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+.fp-feature-desc { font-size: 13px; color: #777; line-height: 1.4; }
+.fp-cta { width: 100%; max-width: 400px; padding: 24px 24px 40px; }
+.fp-cta-btn { width: 100%; padding: 18px; border-radius: 14px; border: none; background: #1a1a1a; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; letter-spacing: 0.01em; }
+.fp-cta-btn:active { background: #333; transform: scale(0.98); }
+.fp-hint { text-align: center; font-size: 12px; color: #bbb; margin-top: 10px; }
+
 /* 4 Gewinnt */
 .vg-wrap { background: #1a1a2e; border-radius: 12px; padding: 10px; margin-bottom: 2px; }
 .vg-board { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-bottom: 6px; }
@@ -319,6 +337,51 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </style>
 </head>
 <body>
+
+<div id="front-page" class="fp-overlay">
+  <div class="fp-hero">
+    <div class="fp-ball">🎳</div>
+    <div class="fp-title">Kegel Spiele</div>
+    <div class="fp-sub">Spieleabend-App</div>
+    <p class="fp-desc">Eine App für euren Kegelabend — beliebte Kegelspiele, direkt erklärt und automatisch ausgewertet.</p>
+  </div>
+
+  <div class="fp-features">
+    <div class="fp-feature">
+      <div class="fp-feature-icon">📖</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Erklärungen inklusive</div>
+        <div class="fp-feature-desc">Jedes Spiel hat eine kurze Anleitung — ideal für Neulinge und als Auffrischung.</div>
+      </div>
+    </div>
+    <div class="fp-feature">
+      <div class="fp-feature-icon">🏆</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Automatische Auswertung</div>
+        <div class="fp-feature-desc">Punkte eintragen, auf „Auswerten" drücken — die App zeigt sofort wer verloren hat.</div>
+      </div>
+    </div>
+    <div class="fp-feature">
+      <div class="fp-feature-icon">👥</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Flexibel für jede Runde</div>
+        <div class="fp-feature-desc">Wählt euren Club oder erstellt ein neues Team mit eigenen Namen — und los geht's.</div>
+      </div>
+    </div>
+    <div class="fp-feature">
+      <div class="fp-feature-icon">🎯</div>
+      <div class="fp-feature-text">
+        <div class="fp-feature-title">Alle Spiele sind „In die Vollen"</div>
+        <div class="fp-feature-desc">Tannenbaum, Abräumen, Bis 100, Blackjack, 4 Gewinnt und mehr.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fp-cta">
+    <button class="fp-cta-btn" onclick="showClubSelector()">Team auswählen &amp; loslegen →</button>
+    <div class="fp-hint">Blackout Boys · Harske Bössels · Eigenes Team</div>
+  </div>
+</div>
 
 <div id="club-selector" class="club-selector-overlay">
 
@@ -1527,8 +1590,13 @@ function confirmReset() {
   if(confirm('Alle Spiele zurücksetzen?')) { resetAllGames(); renderAll(); }
 }
 
-// Show club selector on load
-document.getElementById('club-selector').style.display='flex';
+function showClubSelector() {
+  document.getElementById('front-page').style.display='none';
+  document.getElementById('club-selector').style.display='flex';
+}
+
+// Show front page on load
+document.getElementById('front-page').style.display='flex';
 
 // Register service worker
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
