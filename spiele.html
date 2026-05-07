@@ -1805,18 +1805,31 @@ function goToTeamSelect() {
   window.location.href = 'index.html';
 }
 
-// URL-param based initialization — skip front-page when coming from index.html
+// URL-param based initialization — team comes from index.html
 (function() {
   const params = new URLSearchParams(window.location.search);
   const club = params.get('club');
-  if (club && CLUBS[club]) {
-    // Auto-select club, skip front-page and club-selector overlays
+
+  if (club === 'custom') {
+    // Build CLUBS['custom'] from localStorage data set by index.html
+    const raw = localStorage.getItem('kegel_custom_team');
+    if (raw) {
+      const d = JSON.parse(raw);
+      CLUBS['custom'] = { id:'custom', name: d.name||'Neues Team', color:'#7c4daa', members: [...(d.members||[])] };
+      document.getElementById('front-page').style.display = 'none';
+      document.getElementById('club-selector').style.display = 'none';
+      selectClub('custom');
+    } else {
+      window.location.href = 'index.html';
+    }
+  } else if (club && CLUBS[club]) {
+    // Preset club (bb / hb)
     document.getElementById('front-page').style.display = 'none';
     document.getElementById('club-selector').style.display = 'none';
     selectClub(club);
   } else {
-    // Normal standalone entry — show front page
-    document.getElementById('front-page').style.display = 'flex';
+    // No valid param — redirect back to start
+    window.location.href = 'index.html';
   }
 })();
 

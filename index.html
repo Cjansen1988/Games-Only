@@ -205,6 +205,21 @@
         .ts-card-hb .ts-team-badge  { background:#e3f0ff; color:#1a3575; }
         .ts-card-new .ts-team-badge { background:#f3e5f5; color:#7c4daa; }
 
+        /* ── Custom Team Screen ── */
+        #customTeamScreen { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; position:relative; gap:1.5rem; }
+        .ct-form { background:white; border-radius:18px; padding:1.75rem; width:100%; max-width:440px; display:flex; flex-direction:column; gap:1rem; box-shadow:0 8px 32px rgba(0,0,0,.3); }
+        .ct-field { display:flex; flex-direction:column; gap:.4rem; }
+        .ct-lbl { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#888; }
+        .ct-inp { height:46px; border:1.5px solid var(--border); border-radius:10px; padding:0 14px; font-size:15px; background:#fafafa; color:#1a1a1a; width:100%; outline:none; transition:border-color .15s; }
+        .ct-inp:focus { border-color:var(--primary-light); background:white; box-shadow:0 0 0 3px rgba(57,73,171,.1); }
+        .ct-add-row { display:flex; gap:8px; }
+        .ct-add-row .ct-inp { flex:1; }
+        .ct-add-btn { height:46px; min-width:52px; border-radius:10px; border:none; background:var(--primary); color:#fff; font-size:22px; font-weight:300; cursor:pointer; flex-shrink:0; }
+        .ct-add-btn:hover { background:var(--primary-light); }
+        .ct-player-list { border:1px solid var(--border); border-radius:10px; max-height:220px; overflow-y:auto; background:#fafafa; }
+        .ct-footer { display:flex; gap:.75rem; }
+        .ct-footer .btn { flex:1; height:46px; justify-content:center; }
+
         /* ── Mode Select ── */
         #modeSelectScreen { min-height:100vh; background:linear-gradient(160deg,#0d1757,#1a237e,#283593); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; position:relative; }
         .ms-back-btn { position:absolute; top:1.2rem; left:1.5rem; background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); border-radius:8px; padding:.4rem .9rem; font-size:.82rem; font-weight:700; cursor:pointer; transition:all .18s; }
@@ -276,6 +291,36 @@
             <div class="ts-card-title">Neues Team</div>
             <div class="ts-card-desc">Eigene Spieler anlegen und einen Mannschaftsnamen vergeben</div>
             <span class="ts-team-badge">Leer starten</span>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ CUSTOM TEAM SCREEN ══════════ -->
+<div id="customTeamScreen" class="hidden">
+    <button class="ms-back-btn" onclick="ctBack()">← Zurück</button>
+    <div class="ms-header" style="margin-bottom:0">
+        <h1>✏️ Neues Team</h1>
+        <p>Gebt eurem Team einen Namen und fügt die Spieler hinzu.</p>
+    </div>
+    <div class="ct-form">
+        <div class="ct-field">
+            <label class="ct-lbl" for="ctNameInput">Teamname</label>
+            <input id="ctNameInput" class="ct-inp" type="text" placeholder="z.B. Kegel-Freunde" maxlength="30" autocomplete="off">
+        </div>
+        <div class="ct-field">
+            <label class="ct-lbl">Spieler hinzufügen</label>
+            <div class="ct-add-row">
+                <input id="ctMemberInput" class="ct-inp" type="text" placeholder="Name..." maxlength="25" autocomplete="off"
+                    onkeydown="if(event.key==='Enter') ctAddMember()">
+                <button class="ct-add-btn" onclick="ctAddMember()">+</button>
+            </div>
+        </div>
+        <div class="ct-player-list" id="ctMemberList">
+            <p class="empty-hint">Noch keine Spieler hinzugefügt.</p>
+        </div>
+        <div class="ct-footer">
+            <button class="btn btn-ghost" onclick="ctBack()" style="background:rgba(0,0,0,.06);color:#333;border-color:var(--border)">Abbrechen</button>
+            <button id="ctConfirmBtn" class="btn btn-accent" onclick="ctConfirm()" disabled>Weiter →</button>
         </div>
     </div>
 </div>
@@ -538,10 +583,85 @@ function selectTeam(teamKey) {
     currentTeam = teamKey;
     localStorage.setItem('kegel_team', teamKey);
     localStorage.removeItem('kegel_mode');
-    const label = teamKey==='custom' ? 'Neues Team – was möchtest du machen?' :
-                  'Team: ' + PRESET_TEAMS[teamKey].name + ' – was möchtest du machen?';
-    document.getElementById('modeSelectTeamLabel').textContent = label;
     document.getElementById('teamSelectScreen').classList.add('hidden');
+    if (teamKey === 'custom') {
+        // Show the team entry form
+        ctReset();
+        document.getElementById('customTeamScreen').classList.remove('hidden');
+        setTimeout(() => document.getElementById('ctNameInput').focus(), 100);
+    } else {
+        updateModeSelectLabel();
+        document.getElementById('modeSelectScreen').classList.remove('hidden');
+    }
+}
+
+function updateModeSelectLabel() {
+    let label;
+    if (currentTeam === 'custom') {
+        const d = JSON.parse(localStorage.getItem('kegel_custom_team') || '{}');
+        label = (d.name || 'Neues Team') + ' – was möchtest du machen?';
+    } else {
+        label = 'Team: ' + PRESET_TEAMS[currentTeam].name + ' – was möchtest du machen?';
+    }
+    document.getElementById('modeSelectTeamLabel').textContent = label;
+}
+
+// ── Custom Team Form ──────────────────────────────────
+let customMembers = [];
+
+function ctReset() {
+    customMembers = [];
+    const nameInp = document.getElementById('ctNameInput');
+    const memInp  = document.getElementById('ctMemberInput');
+    if (nameInp) nameInp.value = '';
+    if (memInp)  memInp.value  = '';
+    ctRenderList();
+}
+
+function ctBack() {
+    document.getElementById('customTeamScreen').classList.add('hidden');
+    localStorage.removeItem('kegel_team');
+    currentTeam = 'custom';
+    document.getElementById('teamSelectScreen').classList.remove('hidden');
+}
+
+function ctAddMember() {
+    const inp  = document.getElementById('ctMemberInput');
+    const name = inp.value.trim();
+    if (!name || customMembers.includes(name)) { inp.focus(); return; }
+    customMembers.push(name);
+    inp.value = '';
+    ctRenderList();
+    inp.focus();
+}
+
+function ctRemoveMember(i) {
+    customMembers.splice(i, 1);
+    ctRenderList();
+}
+
+function ctRenderList() {
+    const list = document.getElementById('ctMemberList');
+    if (!list) return;
+    if (!customMembers.length) {
+        list.innerHTML = '<p class="empty-hint">Noch keine Spieler hinzugefügt.</p>';
+    } else {
+        list.innerHTML = customMembers.map((name, i) => `
+            <div class="player-item">
+                <span class="player-name">${esc(name)}</span>
+                <button class="btn btn-sm btn-danger" onclick="ctRemoveMember(${i})">✕</button>
+            </div>`).join('');
+    }
+    const btn = document.getElementById('ctConfirmBtn');
+    if (btn) btn.disabled = customMembers.length < 1;
+}
+
+function ctConfirm() {
+    if (!customMembers.length) return;
+    const teamName = document.getElementById('ctNameInput').value.trim() || 'Neues Team';
+    localStorage.setItem('kegel_custom_team', JSON.stringify({ name: teamName, members: [...customMembers] }));
+    document.getElementById('customTeamScreen').classList.add('hidden');
+    updateModeSelectLabel();
     document.getElementById('modeSelectScreen').classList.remove('hidden');
 }
 
@@ -562,18 +682,22 @@ function showMode(mode) {
     } else {
         S = { teamName:'', players:[], nextId:1, scores:{g1:{},g2:{},s3:{},fb:{}}, activeTab:'mannschaft', s3PicIdx:0, fbThrowIdx:0 };
         load();
-        if (!S.players.length && currentTeam !== 'custom') {
-            const preset = PRESET_TEAMS[currentTeam];
-            S.teamName = preset.name;
-            preset.players.forEach(name => {
-                const id = S.nextId++;
-                S.players.push({ id, name, isAufschreiber:false, isDamen:false });
-                S.scores.g1[id]=[null,null,null,null,null];
-                S.scores.g2[id]=[null,null,null,null,null];
-                S.scores.s3[id]=[[],[],[],[],[]];
-                S.scores.fb[id]=Array(10).fill(null).map(()=>[]);
-            });
-            save();
+        if (!S.players.length) {
+            const members = currentTeam !== 'custom'
+                ? { name: PRESET_TEAMS[currentTeam].name, list: PRESET_TEAMS[currentTeam].players }
+                : (() => { const d=JSON.parse(localStorage.getItem('kegel_custom_team')||'{}'); return { name: d.name||'', list: d.members||[] }; })();
+            if (members.list.length) {
+                S.teamName = members.name;
+                members.list.forEach(name => {
+                    const id = S.nextId++;
+                    S.players.push({ id, name, isAufschreiber:false, isDamen:false });
+                    S.scores.g1[id]=[null,null,null,null,null];
+                    S.scores.g2[id]=[null,null,null,null,null];
+                    S.scores.s3[id]=[[],[],[],[],[]];
+                    S.scores.fb[id]=Array(10).fill(null).map(()=>[]);
+                });
+                save();
+            }
         }
         document.getElementById('appMain').classList.remove('hidden');
         document.getElementById('teamNameInput').value = S.teamName || '';
@@ -587,16 +711,15 @@ function showMode(mode) {
 function backToModeSelect() {
     localStorage.removeItem('kegel_mode');
     ['appMain','standingsView'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-    const label = currentTeam==='custom' ? 'Neues Team – was möchtest du machen?' :
-                  'Team: ' + PRESET_TEAMS[currentTeam].name + ' – was möchtest du machen?';
-    document.getElementById('modeSelectTeamLabel').textContent = label;
+    updateModeSelectLabel();
     document.getElementById('modeSelectScreen').classList.remove('hidden');
 }
 
 function backToTeamSelect() {
     localStorage.removeItem('kegel_mode');
     localStorage.removeItem('kegel_team');
-    ['modeSelectScreen','appMain'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    localStorage.removeItem('kegel_custom_team');
+    ['modeSelectScreen','appMain','customTeamScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
     document.getElementById('teamSelectScreen').classList.remove('hidden');
 }
 
@@ -615,14 +738,19 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     const savedTeam = localStorage.getItem('kegel_team');
     const savedMode = localStorage.getItem('kegel_mode');
+    // If custom team was selected but no team data exists → back to start
+    if (savedTeam === 'custom' && !localStorage.getItem('kegel_custom_team')) {
+        localStorage.removeItem('kegel_team');
+        localStorage.removeItem('kegel_mode');
+        document.getElementById('teamSelectScreen').classList.remove('hidden');
+        return;
+    }
     if (savedTeam) {
         currentTeam = savedTeam;
         if (savedMode==='normal'||savedMode==='stadtmeisterschaft') {
             showMode(savedMode);
         } else {
-            const label = savedTeam==='custom' ? 'Neues Team – was möchtest du machen?' :
-                          'Team: ' + PRESET_TEAMS[savedTeam].name + ' – was möchtest du machen?';
-            document.getElementById('modeSelectTeamLabel').textContent = label;
+            updateModeSelectLabel();
             document.getElementById('modeSelectScreen').classList.remove('hidden');
         }
     } else {
