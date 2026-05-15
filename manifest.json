@@ -2,7 +2,7 @@
   "name": "Kegel Spiele",
   "short_name": "Spiele",
   "description": "Kegelspiele für Blackout Boys & Harske Bössels",
-  "start_url": "./spiele.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f4f0",
   "theme_color": "#1a1a1a",
